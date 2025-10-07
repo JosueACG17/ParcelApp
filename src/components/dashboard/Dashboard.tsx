@@ -1,20 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../../stores/authStore';
+import { useAlertStore } from '../../stores/alertStore';
+import { useSensorData } from '../../hooks/useSensorData';
+import { StatsGrid } from './StatsGrid';
+import { ParcelCard, type ParcelCardData } from './ParcelCard';
 import RealTimeSensors from './RealTimeSensors';
 import SensorCharts from './SensorCharts';
 import ProductionCharts from './ProductionCharts';
 import ParcelMap from './ParcelMap';
 import ParcelsCRUD from './ParcelsCRUD';
+import AlertsPage from '../../pages/AlertsPage';
 import ConfirmModal from '../ui/ConfirmModal';
 import FullScreenToggle from '../ui/FullScreenToggle';
-
-// Iconos usando Lucide React
-import { 
-  TrendingUp, 
-  TrendingDown, 
+import type { DashboardTab } from '../../constants/dashboard';
+import {
   MapPin,
-  Settings,
   Bell,
   Search,
   Filter,
@@ -28,80 +29,39 @@ import {
   LogOut,
   Menu,
   X,
+  Settings,
 } from 'lucide-react';
+import { formatFullDate } from '../../utils/format';
 
-interface SensorData {
-  time: string;
-  temperature: number;
-  humidity: number;
-  solarRadiation: number;
-  rain: number;
-}
-
-const Dashboard: React.FC = () => {
+/**
+ * Dashboard refactorizado y limpio
+ * Componente principal más modular y mantenible
+ */
+const DashboardClean: React.FC = () => {
   const { user, logout } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<'overview' | 'sensors' | 'analytics' | 'map' | 'parcels'>('overview');
-  const [sensorData, setSensorData] = useState<SensorData[]>([]);
+  const { stats: alertStats, generateMockAlerts } = useAlertStore();
+  const { sensorData } = useSensorData();
+  
+  const [activeTab, setActiveTab] = useState<DashboardTab>('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  // Generar datos simulados para las gráficas
+  // Inicializar alertas mock
   useEffect(() => {
-    const generateMockData = () => {
-      const data: SensorData[] = [];
-      const now = new Date();
-      
-      for (let i = 23; i >= 0; i--) {
-        const time = new Date(now.getTime() - i * 60 * 60 * 1000);
-        data.push({
-          time: time.toISOString(),
-          temperature: 20 + Math.sin(i * 0.3) * 8 + Math.random() * 3,
-          humidity: 60 + Math.cos(i * 0.2) * 20 + Math.random() * 5,
-          solarRadiation: Math.max(0, 400 + Math.sin((i - 12) * 0.5) * 400 + Math.random() * 100),
-          rain: Math.random() < 0.8 ? 0 : Math.random() * 10
-        });
-      }
-      return data;
-    };
+    generateMockAlerts();
+  }, [generateMockAlerts]);
 
-    setSensorData(generateMockData());
+  // Datos mock de parcelas - TODO: Reemplazar con API real
+  const mockParcels: ParcelCardData[] = [
+    { id: 1, name: 'Parcela Norte A1', status: 'Activa', crop: 'Maíz', area: '12.5 ha', progress: 75, health: 'Excelente' },
+    { id: 2, name: 'Parcela Sur B3', status: 'En preparación', crop: 'Trigo', area: '8.2 ha', progress: 45, health: 'Buena' },
+    { id: 3, name: 'Parcela Este C2', status: 'Cosechada', crop: 'Soja', area: '15.0 ha', progress: 100, health: 'Excelente' },
+    { id: 4, name: 'Parcela Oeste D1', status: 'Activa', crop: 'Girasol', area: '6.8 ha', progress: 60, health: 'Regular' },
+  ];
 
-    // Actualizar datos cada 5 minutos
-    const interval = setInterval(() => {
-      setSensorData(generateMockData());
-    }, 5 * 60 * 1000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  // Funciones
-  const handleLogout = () => {
-    logout();
-    setShowLogoutModal(false);
-  };
-
-  const toggleFullScreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen();
-      setIsFullScreen(true);
-    } else {
-      document.exitFullscreen();
-      setIsFullScreen(false);
-    }
-  };
-
-  // Escuchar cambios de fullscreen
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullScreen(!!document.fullscreenElement);
-    };
-
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
-  }, []);
-
-  const stats = [
+  // Estadísticas del dashboard
+  const dashboardStats = [
     { 
       title: 'Parcelas Activas', 
       value: '24', 
@@ -131,20 +91,13 @@ const Dashboard: React.FC = () => {
     },
     { 
       title: 'Alertas Activas', 
-      value: '3', 
+      value: (alertStats.total - alertStats.resolved).toString(), 
       icon: Bell, 
       color: 'from-red-400 to-pink-500', 
-      change: '-15%',
-      trend: 'down' as const,
-      description: '2 críticas, 1 media'
+      change: alertStats.critical > 0 ? '+' + alertStats.critical + '%' : '-15%',
+      trend: alertStats.critical > 0 ? 'up' as const : 'down' as const,
+      description: `${alertStats.critical} críticas, ${alertStats.medium} medias`
     },
-  ];
-
-  const recentParcels = [
-    { id: 1, name: 'Parcela Norte A1', status: 'Activa', crop: 'Maíz', area: '12.5 ha', progress: 75, health: 'Excelente' },
-    { id: 2, name: 'Parcela Sur B3', status: 'En preparación', crop: 'Trigo', area: '8.2 ha', progress: 45, health: 'Buena' },
-    { id: 3, name: 'Parcela Este C2', status: 'Cosechada', crop: 'Soja', area: '15.0 ha', progress: 100, health: 'Excelente' },
-    { id: 4, name: 'Parcela Oeste D1', status: 'Activa', crop: 'Girasol', area: '6.8 ha', progress: 60, health: 'Regular' },
   ];
 
   const tabs = [
@@ -153,26 +106,34 @@ const Dashboard: React.FC = () => {
     { id: 'analytics', label: 'Análisis', icon: PieChart },
     { id: 'map', label: 'Mapa', icon: MapPin },
     { id: 'parcels', label: 'Parcelas', icon: Database },
-  ];
+    { id: 'alerts', label: 'Alertas', icon: Bell },
+  ] as const;
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Activa': return 'bg-green-100 text-green-800';
-      case 'En preparación': return 'bg-yellow-100 text-yellow-800';
-      case 'Cosechada': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
+  // Funciones de manejo
+  const handleLogout = () => {
+    logout();
+    setShowLogoutModal(false);
+  };
+
+  const toggleFullScreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen();
+      setIsFullScreen(true);
+    } else {
+      document.exitFullscreen();
+      setIsFullScreen(false);
     }
   };
 
-  const getHealthColor = (health: string) => {
-    switch (health) {
-      case 'Excelente': return 'text-green-600';
-      case 'Buena': return 'text-blue-600';
-      case 'Regular': return 'text-yellow-600';
-      case 'Mala': return 'text-red-600';
-      default: return 'text-gray-600';
-    }
-  };
+  // Escuchar cambios de fullscreen
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullScreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
 
   const renderContent = () => {
     switch (activeTab) {
@@ -180,35 +141,7 @@ const Dashboard: React.FC = () => {
         return (
           <div className="space-y-8">
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {stats.map((stat, index) => {
-                const IconComponent = stat.icon;
-                return (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="bg-white/90 backdrop-blur-lg rounded-2xl p-6 shadow-lg border border-white/20 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
-                  >
-                    <div className="flex items-center justify-between mb-4">
-                      <div className={`w-12 h-12 bg-gradient-to-r ${stat.color} rounded-xl flex items-center justify-center shadow-lg`}>
-                        <IconComponent className="w-6 h-6 text-white" />
-                      </div>
-                      <div className={`flex items-center gap-1 px-2 py-1 rounded-lg text-sm font-semibold ${
-                        stat.trend === 'up' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
-                      }`}>
-                        {stat.trend === 'up' ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                        {stat.change}
-                      </div>
-                    </div>
-                    <h3 className="text-gray-600 text-sm font-medium mb-1">{stat.title}</h3>
-                    <p className="text-3xl font-bold text-gray-800 mb-1">{stat.value}</p>
-                    <p className="text-xs text-gray-500">{stat.description}</p>
-                  </motion.div>
-                );
-              })}
-            </div>
+            <StatsGrid stats={dashboardStats} />
 
             {/* Sensores en Tiempo Real */}
             <RealTimeSensors />
@@ -220,46 +153,22 @@ const Dashboard: React.FC = () => {
                   <Leaf className="w-6 h-6 text-green-600" />
                   Parcelas Recientes
                 </h3>
-                <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors flex items-center gap-2">
+                <button 
+                  onClick={() => setActiveTab('parcels')}
+                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors flex items-center gap-2 cursor-pointer"
+                >
                   <Users className="w-4 h-4" />
                   Ver todas
                 </button>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {recentParcels.map((parcel) => (
-                  <motion.div
+                {mockParcels.map((parcel) => (
+                  <ParcelCard
                     key={parcel.id}
-                    whileHover={{ scale: 1.02 }}
-                    className="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-all duration-300 border border-gray-200"
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <div>
-                        <h4 className="font-semibold text-gray-800">{parcel.name}</h4>
-                        <p className="text-sm text-gray-600">{parcel.crop} • {parcel.area}</p>
-                      </div>
-                      <div className="text-right">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(parcel.status)}`}>
-                          {parcel.status}
-                        </span>
-                        <p className={`text-sm font-medium mt-1 ${getHealthColor(parcel.health)}`}>
-                          {parcel.health}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-3">
-                      <div className="flex-1 bg-gray-200 rounded-full h-2">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${parcel.progress}%` }}
-                          transition={{ duration: 1, delay: 0.5 }}
-                          className="bg-gradient-to-r from-green-400 to-emerald-500 h-2 rounded-full"
-                        ></motion.div>
-                      </div>
-                      <span className="text-sm font-medium text-gray-600">{parcel.progress}%</span>
-                    </div>
-                  </motion.div>
+                    parcel={parcel}
+                    onClick={() => console.log('Clicked parcel:', parcel)}
+                  />
                 ))}
               </div>
             </div>
@@ -312,10 +221,15 @@ const Dashboard: React.FC = () => {
       case 'parcels':
         return <ParcelsCRUD />;
 
+      case 'alerts':
+        return <AlertsPage />;
+
       default:
         return null;
     }
   };
+
+  const activeAlerts = alertStats.total - alertStats.resolved;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
@@ -352,7 +266,7 @@ const Dashboard: React.FC = () => {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => {
-                    setActiveTab(tab.id as typeof activeTab);
+                    setActiveTab(tab.id as DashboardTab);
                     setSidebarOpen(false);
                   }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 cursor-pointer ${
@@ -363,6 +277,12 @@ const Dashboard: React.FC = () => {
                 >
                   <IconComponent className="w-5 h-5" />
                   {tab.label}
+                  {/* Badge de alertas activas */}
+                  {tab.id === 'alerts' && activeAlerts > 0 && (
+                    <span className="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full min-w-[20px] text-center">
+                      {activeAlerts}
+                    </span>
+                  )}
                 </motion.button>
               );
             })}
@@ -410,17 +330,13 @@ const Dashboard: React.FC = () => {
                     ¡Bienvenido de nuevo, {user?.name}!
                   </h1>
                   <p className="text-gray-600 capitalize">
-                    {new Date().toLocaleDateString('es-ES', { 
-                      weekday: 'long', 
-                      year: 'numeric', 
-                      month: 'long', 
-                      day: 'numeric' 
-                    })}
+                    {formatFullDate(new Date())}
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-4">
+                {/* Search Bar */}
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <input
@@ -430,12 +346,26 @@ const Dashboard: React.FC = () => {
                   />
                 </div>
 
-                {/* Pantalla completa */}
+                {/* Notification Bell */}
+                <button 
+                  onClick={() => setActiveTab('alerts')}
+                  className="relative p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-xl transition-colors"
+                >
+                  <Bell className="w-6 h-6" />
+                  {activeAlerts > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-2 py-1 rounded-full min-w-[20px] text-center">
+                      {activeAlerts}
+                    </span>
+                  )}
+                </button>
+
+                {/* Full Screen Toggle */}
                 <FullScreenToggle 
                   isFullScreen={isFullScreen}
                   onToggle={toggleFullScreen}
                 />
               
+                {/* Settings Button */}
                 <button className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-xl transition-colors">
                   <Settings className="w-6 h-6" />
                 </button>
@@ -483,4 +413,4 @@ const Dashboard: React.FC = () => {
   );
 };
 
-export default Dashboard;
+export default DashboardClean;
