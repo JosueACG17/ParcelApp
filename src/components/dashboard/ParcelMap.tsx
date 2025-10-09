@@ -25,7 +25,7 @@ const parcelsData: Parcel[] = [
   {
     id: '1',
     name: 'Parcela Norte A1',
-    coordinates: [-34.6037, -58.3816], // Buenos Aires como ejemplo
+    coordinates: [-34.6037, -58.3816], 
     area: 12.5,
     crop: 'Maíz',
     status: 'active',
