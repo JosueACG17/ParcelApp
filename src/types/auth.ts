@@ -2,7 +2,9 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  phone?: string;
   role: string;
+  status?: 'active' | 'inactive' | 'pending';
   createdAt: string;
   updatedAt: string;
 }
