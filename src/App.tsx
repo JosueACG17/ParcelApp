@@ -5,6 +5,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import ProtectedRoute from './components/layout/ProtectedRoute';
+import UserDashboard from './components/dashboard/UserDashboard';
 
 function App() {
   const { isAuthenticated } = useAuthStore();
@@ -29,6 +30,12 @@ function App() {
             isAuthenticated ? <Navigate to="/dashboard" replace /> : <RegisterPage />
           } 
         />
+        <Route 
+          path="/dashboard-user" 
+          element={
+            isAuthenticated ? <Navigate to="/dashboard-user" replace /> : <UserDashboard />
+          } 
+        />
         
         {/* Rutas protegidas */}
         <Route
@@ -39,6 +46,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+        
         
         {/* Redirección por defecto */}
         <Route 
