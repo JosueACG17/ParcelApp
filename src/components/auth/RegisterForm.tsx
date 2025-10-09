@@ -12,6 +12,7 @@ import {
   FaUser,
   FaUserPlus,
   FaLeaf,
+  FaPhone,
 } from "react-icons/fa";
 
 const RegisterForm: React.FC = () => {
@@ -34,7 +35,12 @@ const RegisterForm: React.FC = () => {
   });
 
   const onSubmit = async (data: RegisterFormData) => {
-    const success = await registerUser(data.name, data.email, data.password);
+    const success = await registerUser({
+      nombre: data.name,
+      correo: data.email,
+      password: data.password,
+      telefono: data.telefono
+    });
     if (!success) {
       setError("root", {
         message: "Error al crear la cuenta. Inténtalo de nuevo.",
@@ -231,6 +237,52 @@ const RegisterForm: React.FC = () => {
                     <p className="text-red-500 text-sm mt-2 flex items-center gap-2 animate-fade-in">
                       <span className="w-1 h-1 bg-red-500 rounded-full"></span>
                       {errors.email.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Teléfono - fila completa */}
+              <div className="w-full">
+                <div className="group">
+                  <label
+                    htmlFor="telefono"
+                    className="block text-sm font-bold text-gray-700 mb-2 group-focus-within:text-lime-600 transition-colors"
+                  >
+                    Teléfono
+                  </label>
+                  <div className="relative">
+                    <FaPhone
+                      className={`absolute left-4 top-4 transition-all duration-300 ${
+                        errors.telefono
+                          ? "text-red-400"
+                          : "text-gray-400 group-focus-within:text-lime-500"
+                      }`}
+                    />
+                    <input
+                      {...register("telefono")}
+                      id="telefono"
+                      type="tel"
+                      placeholder="Escribe tu número de teléfono"
+                      className={`w-full pl-12 pr-4 py-3 rounded-2xl border-2 focus:outline-none focus:ring-4 transition-all duration-300 font-medium placeholder:text-gray-400 ${
+                        errors.telefono
+                          ? "border-red-300 bg-red-50/50 focus:ring-red-200/40 focus:border-red-400"
+                          : "border-gray-200 bg-white/70 hover:bg-white hover:border-gray-300 focus:ring-lime-200/40 focus:border-lime-400 focus:shadow-lg"
+                      }`}
+                    />
+                    {/* Indicador de validación */}
+                    <div
+                      className={`absolute right-4 top-4 w-2 h-2 rounded-full transition-all duration-300 ${
+                        errors.telefono
+                          ? "bg-red-400"
+                          : "bg-transparent group-focus-within:bg-lime-400"
+                      }`}
+                    ></div>
+                  </div>
+                  {errors.telefono && (
+                    <p className="text-red-500 text-sm mt-2 flex items-center gap-2 animate-fade-in">
+                      <span className="w-1 h-1 bg-red-500 rounded-full"></span>
+                      {errors.telefono.message}
                     </p>
                   )}
                 </div>

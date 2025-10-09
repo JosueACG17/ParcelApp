@@ -25,7 +25,10 @@ const LoginForm: React.FC = () => {
   });
 
   const onSubmit = async (data: LoginFormData) => {
-    const success = await login(data.email, data.password);
+    const success = await login({
+      correo: data.email,
+      password: data.password
+    });
     if (!success) {
       setError("root", {
         message: "Credenciales inválidas. Verifica tu email y contraseña.",

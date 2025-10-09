@@ -4,6 +4,7 @@ import { useAuthStore, initializeAuth } from './stores/authStore';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
+import NotFoundPage from './pages/NotFoundPage';
 import ProtectedRoute from './components/layout/ProtectedRoute';
 
 function App() {
@@ -51,9 +52,7 @@ function App() {
         {/* Ruta 404 */}
         <Route 
           path="*" 
-          element={
-            <Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />
-          } 
+          element={<NotFoundPage />}
         />
       </Routes>
     </Router>

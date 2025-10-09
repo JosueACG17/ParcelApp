@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../../stores/authStore';
 import { useAlertStore } from '../../stores/alertStore';
-import { useSensorData } from '../../hooks/useSensorData';
+import { useDashboardData } from '../../hooks/useDashboardData';
 import { StatsGrid } from './StatsGrid';
-import { ParcelCard, type ParcelCardData } from './ParcelCard';
+import { ParcelCard } from './ParcelCard';
 import RealTimeSensors from './RealTimeSensors';
 import SensorCharts from './SensorCharts';
 import ProductionCharts from './ProductionCharts';
@@ -24,7 +24,6 @@ import {
   PieChart,
   Users,
   Database,
-  Zap,
   Leaf,
   LogOut,
   Menu,
@@ -33,14 +32,10 @@ import {
 } from 'lucide-react';
 import { formatFullDate } from '../../utils/format';
 
-/**
- * Dashboard refactorizado y limpio
- * Componente principal más modular y mantenible
- */
 const DashboardClean: React.FC = () => {
   const { user, logout } = useAuthStore();
   const { stats: alertStats, generateMockAlerts } = useAlertStore();
-  const { sensorData } = useSensorData();
+  const { parcelas, dashboardStats } = useDashboardData();
   
   const [activeTab, setActiveTab] = useState<DashboardTab>('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -51,54 +46,6 @@ const DashboardClean: React.FC = () => {
   useEffect(() => {
     generateMockAlerts();
   }, [generateMockAlerts]);
-
-  // Datos mock de parcelas - TODO: Reemplazar con API real
-  const mockParcels: ParcelCardData[] = [
-    { id: 1, name: 'Parcela Norte A1', status: 'Activa', crop: 'Maíz', area: '12.5 ha', progress: 75, health: 'Excelente' },
-    { id: 2, name: 'Parcela Sur B3', status: 'En preparación', crop: 'Trigo', area: '8.2 ha', progress: 45, health: 'Buena' },
-    { id: 3, name: 'Parcela Este C2', status: 'Cosechada', crop: 'Soja', area: '15.0 ha', progress: 100, health: 'Excelente' },
-    { id: 4, name: 'Parcela Oeste D1', status: 'Activa', crop: 'Girasol', area: '6.8 ha', progress: 60, health: 'Regular' },
-  ];
-
-  // Estadísticas del dashboard
-  const dashboardStats = [
-    { 
-      title: 'Parcelas Activas', 
-      value: '24', 
-      icon: Leaf, 
-      color: 'from-green-400 to-emerald-500', 
-      change: '+12%',
-      trend: 'up' as const,
-      description: '4 nuevas este mes'
-    },
-    { 
-      title: 'Sensores Activos', 
-      value: '156', 
-      icon: Zap, 
-      color: 'from-blue-400 to-cyan-500', 
-      change: '+8%',
-      trend: 'up' as const,
-      description: '98.7% operativo'
-    },
-    { 
-      title: 'Producción Estimada', 
-      value: '342.5', 
-      icon: Database, 
-      color: 'from-yellow-400 to-orange-500', 
-      change: '+25%',
-      trend: 'up' as const,
-      description: 'Ton. este trimestre'
-    },
-    { 
-      title: 'Alertas Activas', 
-      value: (alertStats.total - alertStats.resolved).toString(), 
-      icon: Bell, 
-      color: 'from-red-400 to-pink-500', 
-      change: alertStats.critical > 0 ? '+' + alertStats.critical + '%' : '-15%',
-      trend: alertStats.critical > 0 ? 'up' as const : 'down' as const,
-      description: `${alertStats.critical} críticas, ${alertStats.medium} medias`
-    },
-  ];
 
   const tabs = [
     { id: 'overview', label: 'Resumen', icon: Home },
@@ -163,7 +110,7 @@ const DashboardClean: React.FC = () => {
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {mockParcels.map((parcel) => (
+                {parcelas.slice(0, 4).map((parcel) => (
                   <ParcelCard
                     key={parcel.id}
                     parcel={parcel}
@@ -189,7 +136,7 @@ const DashboardClean: React.FC = () => {
               </div>
             </div>
             <RealTimeSensors />
-            <SensorCharts data={sensorData} />
+            <SensorCharts data={[]} />
           </div>
         );
 
@@ -202,7 +149,7 @@ const DashboardClean: React.FC = () => {
               </h2>
             </div>
             <ProductionCharts />
-            <SensorCharts data={sensorData} />
+            <SensorCharts data={[]} />
           </div>
         );
 
@@ -295,7 +242,7 @@ const DashboardClean: React.FC = () => {
                 <Users className="w-5 h-5 text-white" />
               </div>
               <div className="flex-1">
-                <p className="font-semibold text-gray-800 text-sm">{user?.name}</p>
+                <p className="font-semibold text-gray-800 text-sm">{user?.nombre}</p>
                 <p className="text-xs text-gray-500">Administrador</p>
               </div>
             </div>
@@ -327,7 +274,7 @@ const DashboardClean: React.FC = () => {
                 
                 <div>
                   <h1 className="text-2xl font-bold text-gray-800">
-                    ¡Bienvenido de nuevo, {user?.name}!
+                    ¡Bienvenido de nuevo, {user?.nombre}!
                   </h1>
                   <p className="text-gray-600 capitalize">
                     {formatFullDate(new Date())}

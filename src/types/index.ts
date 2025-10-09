@@ -2,3 +2,4 @@
 export * from './auth';
 export * from './api';
 export * from './alerts';
+export * from './parcelas';
