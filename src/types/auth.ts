@@ -1,31 +1,31 @@
 export interface User {
-  id: string;
-  email: string;
-  name: string;
-  phone?: string;
-  role: string;
-  status?: 'active' | 'inactive' | 'pending';
-  createdAt: string;
-  updatedAt: string;
+  id: number;
+  nombre: string;
+  correo: string;
+  telefono: string;
+  isDeleted: boolean;
 }
 
 export interface LoginCredentials {
-  email: string;
+  correo: string;
   password: string;
 }
 
 export interface RegisterCredentials {
-  name: string;
-  email: string;
+  nombre: string;
+  correo: string;
   password: string;
-  confirmPassword: string;
+  telefono: string;
+  confirmPassword?: string;
 }
 
-export interface AuthResponse {
-  success: boolean;
+export interface LoginResponse {
+  token: string;
+  user: User;
+}
+
+export interface RegisterResponse {
   message: string;
-  user?: User;
-  token?: string;
 }
 
 export interface AuthState {

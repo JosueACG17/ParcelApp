@@ -16,6 +16,11 @@ export const nameSchema = z.string()
   .min(2, 'El nombre debe tener al menos 2 caracteres')
   .max(50, 'El nombre no puede tener más de 50 caracteres');
 
+export const phoneSchema = z.string()
+  .min(1, 'El teléfono es requerido')
+  .min(10, 'El teléfono debe tener al menos 10 caracteres')
+  .regex(/^[0-9+\-\s()]+$/, 'El teléfono solo puede contener números, espacios y símbolos +, -, (, )');
+
 // Esquemas completos para formularios
 export const loginSchema = z.object({
   email: emailSchema,
@@ -27,6 +32,7 @@ export const registerSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
   confirmPassword: z.string(),
+  telefono: phoneSchema,
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Las contraseñas no coinciden',
   path: ['confirmPassword'],
