@@ -1,4 +1,3 @@
-// Tipos para el sistema (logs, roles, etc.)
 
 export interface LogEntry {
   id: string | number;

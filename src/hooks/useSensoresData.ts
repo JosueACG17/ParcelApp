@@ -7,9 +7,11 @@ export const useSensores = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchSensores = async () => {
+  const fetchSensores = useCallback(async () => {
     try {
-      setLoading(true);
+      if (sensores.length === 0) {
+        setLoading(true);
+      }
       const data = await sensoresService.getAllSensores();
       setSensores(data);
       setError(null);
@@ -19,17 +21,24 @@ export const useSensores = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [sensores.length]);
 
   useEffect(() => {
     fetchSensores();
-  }, []);
+    
+    // Actualizar datos cada 30 segundos para tiempo real
+    const interval = setInterval(() => {
+      fetchSensores();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [fetchSensores]);
 
   const createSensor = async (sensorData: {
     nombre: string;
+    cultivo: string;
     tipo: 'temperatura' | 'humedad' | 'radiacion_solar' | 'lluvia';
-    ubicacion: string;
-    estado: 'activo' | 'inactivo' | 'mantenimiento';
+    id_parcela_sql: string;
   }) => {
     try {
       const newSensor = await sensoresService.createSensor(sensorData);
@@ -44,9 +53,9 @@ export const useSensores = () => {
 
   const updateSensor = async (id: string, sensorData: {
     nombre?: string;
+    cultivo?: string;
     tipo?: 'temperatura' | 'humedad' | 'radiacion_solar' | 'lluvia';
-    ubicacion?: string;
-    estado?: 'activo' | 'inactivo' | 'mantenimiento';
+    id_parcela_sql?: string;
   }) => {
     try {
       const updatedSensor = await sensoresService.updateSensor(id, sensorData);

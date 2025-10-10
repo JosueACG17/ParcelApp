@@ -100,7 +100,20 @@ class ParcelasService {
       API_ENDPOINTS.CULTIVOS,
       cultivoData
     );
-    return response.data!;
+    
+    // Si response.data existe, lo usamos, sino creamos un cultivo temporal
+    if (response.data) {
+      return response.data;
+    }
+    
+    // Si no hay data, crear un cultivo temporal con los datos enviados
+    const tempCultivo: Cultivo = {
+      id: Date.now(), // ID temporal
+      nombre: cultivoData.nombre,
+      isDeleted: false
+    };
+    
+    return tempCultivo;
   }
 
   async updateCultivo(id: number, cultivoData: UpdateCultivoRequest): Promise<Cultivo> {

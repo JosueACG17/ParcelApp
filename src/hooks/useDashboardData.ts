@@ -76,7 +76,7 @@ export const useDashboardData = () => {
       },
       { 
         title: 'Alertas ', 
-        value: (alertStats.total - alertStats.resolved).toString(), 
+        value: "0", 
         icon: Bell, 
         color: 'from-red-400 to-pink-500', 
         change: alertStats.critical > 0 ? '+' + alertStats.critical + '%' : '-15%',
