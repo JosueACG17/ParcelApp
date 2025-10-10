@@ -22,7 +22,7 @@ export const useDashboardData = () => {
   // Convertir parcelas reales a formato ParcelCardData
   const parcelCards = useMemo(() => {
     return parcelas.map(parcela => ({
-      id: parcela.id,
+      id: typeof parcela.id === 'string' ? parseInt(parcela.id) : parcela.id,
       name: parcela.nombre,
       status: parcela.isDeleted ? 'Inactiva' : 'Activa',
       crop: parcela.nombresCultivos.join(', ') || 'Sin cultivo',

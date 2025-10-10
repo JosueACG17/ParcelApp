@@ -1,15 +1,26 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, type LoginFormData } from "../../utils/validation";
 import { useAuthStore } from "../../stores/authStore";
+import SuccessModal from "../ui/SuccessModal";
 import { FaLeaf, FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 
 const LoginForm: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const { login, isLoading, error } = useAuthStore();
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false); // Nueva flag para controlar el proceso
+  const { login, isLoading, error, user, isAuthenticated } = useAuthStore();
+  const navigate = useNavigate();
+
+  // Redirigir si ya está autenticado (pero NO durante el proceso de login)
+  useEffect(() => {
+    if (isAuthenticated && !isLoggingIn) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, navigate, isLoggingIn]);
 
   useEffect(() => {
     setMounted(true);
@@ -25,15 +36,35 @@ const LoginForm: React.FC = () => {
   });
 
   const onSubmit = async (data: LoginFormData) => {
+    setIsLoggingIn(true); // Marcar que estamos en proceso de login
+    
     const success = await login({
       correo: data.email,
       password: data.password
     });
-    if (!success) {
+    
+    if (success) {
+      console.log('🎉 Login exitoso! Mostrando modal...'); // Debug
+      // Mostrar modal primero
+      setShowSuccessModal(true);
+      console.log('✅ Modal state set to true'); // Debug
+      // Navegar después del delay del modal
+      setTimeout(() => {
+        console.log('🚀 Navegando al dashboard...'); // Debug
+        setIsLoggingIn(false); // Terminar el proceso
+        navigate('/dashboard');
+      }, 3500); // Un poco más que el autoCloseDelay del modal
+    } else {
+      setIsLoggingIn(false); // Terminar el proceso en caso de error
       setError("root", {
         message: "Credenciales inválidas. Verifica tu email y contraseña.",
       });
     }
+  };
+
+  const handleSuccessModalClose = () => {
+    setShowSuccessModal(false);
+    // La navegación ya está manejada en onSubmit
   };
 
   return (
@@ -287,6 +318,16 @@ const LoginForm: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal de éxito */}
+      <SuccessModal
+        isOpen={showSuccessModal}
+        onClose={handleSuccessModalClose}
+        title="¡Inicio de Sesión Exitoso!"
+        message={`¡Bienvenido de vuelta, ${user?.nombre}! Has iniciado sesión correctamente.`}
+        autoClose={true}
+        autoCloseDelay={3000}
+      />
     </div>
   );
 };

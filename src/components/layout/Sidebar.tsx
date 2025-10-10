@@ -91,7 +91,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               <Users className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1">
-              <p className="font-semibold text-gray-800 text-sm">{user?.name}</p>
+              <p className="font-semibold text-gray-800 text-sm">{user?.nombre}</p>
               <p className="text-xs text-gray-500">Administrador</p>
             </div>
           </div>
