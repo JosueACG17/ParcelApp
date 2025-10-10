@@ -44,13 +44,10 @@ const LoginForm: React.FC = () => {
     });
     
     if (success) {
-      console.log('🎉 Login exitoso! Mostrando modal...'); // Debug
       // Mostrar modal primero
       setShowSuccessModal(true);
-      console.log('✅ Modal state set to true'); // Debug
       // Navegar después del delay del modal
       setTimeout(() => {
-        console.log('🚀 Navegando al dashboard...'); // Debug
         setIsLoggingIn(false); // Terminar el proceso
         navigate('/dashboard');
       }, 3500); // Un poco más que el autoCloseDelay del modal

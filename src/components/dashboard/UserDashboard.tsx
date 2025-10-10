@@ -74,7 +74,7 @@ const UserDashboard: React.FC = () => {
                   <ParcelCard
                     key={parcel.id}
                     parcel={parcel}
-                    onClick={() => console.log("Clicked parcel:", parcel)}
+                    onClick={() => {}}
                   />
                 ))}
               </div>
@@ -92,7 +92,7 @@ const UserDashboard: React.FC = () => {
                 <ParcelCard
                   key={parcel.id}
                   parcel={parcel}
-                  onClick={() => console.log("Clicked parcel:", parcel)}
+                  onClick={() => {}}
                 />
               ))}
             </div>

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
-  Plus, 
   Edit, 
   Trash2, 
   Search, 
@@ -14,6 +13,7 @@ import {
 } from 'lucide-react';
 import Modal from '../ui/Modal';
 import ConfirmModal from '../ui/ConfirmModal';
+import SuccessModal from '../ui/SuccessModal';
 import { useUsers } from '../../hooks/useUsersData';
 import { useRoles } from '../../hooks/useSystemData';
 import { authService } from '../../services/authService';
@@ -27,8 +27,8 @@ interface UserFormData {
   role: string;
 }
 
-const UsuariosCRUD: React.FC = () => {
-  const { users, loading, error, updateUser, deleteUser, restoreUser } = useUsers();
+const UsersCRUD: React.FC = () => {
+  const { users, updateUser, deleteUser, restoreUser, refetch } = useUsers();
   const { roles } = useRoles();
   
   // Estados locales
@@ -38,13 +38,19 @@ const UsuariosCRUD: React.FC = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  
+  // Estados para modal de éxito
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+
+
 
   // Filtros
   const filteredUsers = users.filter(user => {
     const matchesSearch = searchTerm === '' || 
       user.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.correo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (user.role || '').toLowerCase().includes(searchTerm.toLowerCase());
+      user.roles.some(role => role.toLowerCase().includes(searchTerm.toLowerCase()));
     
     let matchesStatus = true;
     if (statusFilter === 'active') {
@@ -55,6 +61,13 @@ const UsuariosCRUD: React.FC = () => {
     
     return matchesSearch && matchesStatus;
   });
+
+  // Función helper para mostrar modal de éxito
+  const showSuccess = (message: string) => {
+    setSuccessMessage(message);
+    setShowSuccessModal(true);
+    refetch(); // Actualizar solo la tabla
+  };
 
   // Manejadores
   const handleCreate = async (formData: UserFormData) => {
@@ -68,10 +81,8 @@ const UsuariosCRUD: React.FC = () => {
       });
       
       setShowCreateModal(false);
-      // Refrescar la lista después de crear
-      window.location.reload(); // Temporal hasta tener mejor refresh
-    } catch (error) {
-      console.error('Error al crear usuario:', error);
+      showSuccess('Usuario creado exitosamente');
+    } catch {
       alert('Error al crear usuario. Verifique que el correo no esté ya registrado.');
     }
   };
@@ -87,8 +98,9 @@ const UsuariosCRUD: React.FC = () => {
       });
       setShowEditModal(false);
       setSelectedUser(null);
-    } catch (error) {
-      console.error('Error al actualizar usuario:', error);
+      showSuccess('Usuario actualizado exitosamente');
+    } catch {
+      // Error handling could be added here if needed
     }
   };
 
@@ -99,16 +111,18 @@ const UsuariosCRUD: React.FC = () => {
       await deleteUser(selectedUser.id);
       setShowDeleteModal(false);
       setSelectedUser(null);
-    } catch (error) {
-      console.error('Error al eliminar usuario:', error);
+      showSuccess('Usuario eliminado exitosamente');
+    } catch {
+      // Error handling could be added here if needed
     }
   };
 
   const handleRestore = async (user: User) => {
     try {
       await restoreUser(user.id);
-    } catch (error) {
-      console.error('Error al restaurar usuario:', error);
+      showSuccess('Usuario restaurado exitosamente');
+    } catch {
+      // Error handling could be added here if needed
     }
   };
 
@@ -130,7 +144,7 @@ const UsuariosCRUD: React.FC = () => {
 
   const getRoleColor = (role: string) => {
     switch (role.toLowerCase()) {
-      case 'admin': return 'bg-purple-100 text-purple-800';
+      case 'admin': return 'bg-green-100 text-green-800';
       case 'user': return 'bg-blue-100 text-blue-800';
       default: return 'bg-gray-100 text-gray-800';
     }
@@ -144,22 +158,6 @@ const UsuariosCRUD: React.FC = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="text-center py-12">
-        <div className="text-red-600 mb-2">Error al cargar usuarios</div>
-        <div className="text-sm text-gray-500">{error}</div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -249,9 +247,9 @@ const UsuariosCRUD: React.FC = () => {
                             </span>
                           )}
                         </h3>
-                        <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(user.role || 'User')}`}>
+                        <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(user.roles[0] || 'User')}`}>
                           <Shield className="w-3 h-3 mr-1" />
-                          {getRoleText(user.role || 'User')}
+                          {getRoleText(user.roles[0] || 'User')}
                         </span>
                       </div>
                       
@@ -340,7 +338,7 @@ const UsuariosCRUD: React.FC = () => {
             nombre: selectedUser.nombre,
             correo: selectedUser.correo,
             telefono: selectedUser.telefono,
-            role: selectedUser.role || 'User'
+            role: selectedUser.roles[0] || 'User'
           } : undefined}
           onSubmit={handleEdit}
           roles={roles}
@@ -357,6 +355,14 @@ const UsuariosCRUD: React.FC = () => {
         }}
         title="Eliminar Usuario"
         message={`¿Estás seguro de que deseas eliminar al usuario "${selectedUser?.nombre}"? Esta acción no se puede deshacer.`}
+      />
+
+      {/* Modal de éxito */}
+      <SuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title="¡Operación exitosa!"
+        message={successMessage}
       />
     </div>
   );
@@ -478,4 +484,4 @@ const UserForm: React.FC<UserFormProps> = ({ initialData, onSubmit, roles, isCre
   );
 };
 
-export default UsuariosCRUD;
+export default UsersCRUD;

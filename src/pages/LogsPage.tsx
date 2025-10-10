@@ -3,7 +3,7 @@ import { useLogs } from '../hooks/useSystemData';
 import { AlertTriangle, RefreshCw, AlertCircle, Info, FileText, Search } from 'lucide-react';
 
 const LogsPage: React.FC = () => {
-  const { logs, loading, error, refetch } = useLogs();
+  const { logs, refetch } = useLogs();
   const [searchTerm, setSearchTerm] = useState('');
   const [levelFilter, setLevelFilter] = useState<string>('all');
 
@@ -66,32 +66,6 @@ const LogsPage: React.FC = () => {
     info: logs.filter(l => l.level.toLowerCase() === 'info').length,
     debug: logs.filter(l => l.level.toLowerCase() === 'debug').length,
   };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="text-center py-12">
-        <AlertTriangle className="w-12 h-12 text-red-400 mx-auto mb-4" />
-        <h3 className="text-lg font-medium text-gray-900 mb-2">
-          Error al cargar los logs
-        </h3>
-        <p className="text-gray-500 mb-4">{error}</p>
-        <button
-          onClick={refetch}
-          className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-        >
-          Reintentar
-        </button>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">

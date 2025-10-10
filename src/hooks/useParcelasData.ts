@@ -33,7 +33,13 @@ export const useParcelas = () => {
   }) => {
     try {
       const newParcela = await parcelasService.createParcela(parcelaData);
-      setParcelas(prev => [...prev, newParcela]);
+      
+      // Limpiar error previo si existía
+      setError(null);
+      
+      // Hacer refetch para obtener datos actualizados del servidor
+      await fetchParcelas();
+      
       return newParcela;
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Error al crear la parcela';
@@ -132,15 +138,16 @@ export const useCultivos = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchCultivos = async () => {
+  const fetchCultivos = async (includeDeleted = false) => {
     try {
       setLoading(true);
-      const data = await parcelasService.getAllCultivos();
-      setCultivos(data);
+      const data = await parcelasService.getAllCultivos(includeDeleted);
+      setCultivos(Array.isArray(data) ? data : []);
       setError(null);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Error al cargar los cultivos';
-      setError(errorMessage);
+      setError(`Error al cargar cultivos: ${errorMessage}`);
+      setCultivos([]);
     } finally {
       setLoading(false);
     }
