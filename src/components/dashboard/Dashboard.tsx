@@ -5,12 +5,15 @@ import { useAlertStore } from '../../stores/alertStore';
 import { useDashboardData } from '../../hooks/useDashboardData';
 import { StatsGrid } from './StatsGrid';
 import { ParcelCard } from './ParcelCard';
-import RealTimeSensors from './RealTimeSensors';
+import SensorMonitor from './SensorMonitor';
 import SensorCharts from './SensorCharts';
 import ProductionCharts from './ProductionCharts';
-import ParcelMap from './ParcelMap';
+import MapaParcelas from './MapaParcelas';
 import ParcelsCRUD from './ParcelsCRUD';
-import AlertsPage from '../../pages/AlertsPage';
+import CultivosCRUD from './CultivosCRUD';
+import SensorsCRUD from './SensorsCRUD';
+import UsersCRUD from './UsersCRUD';
+import LogsPage from '../../pages/LogsPage';
 import ConfirmModal from '../ui/ConfirmModal';
 import Sidebar from '../layout/Sidebar';
 import Topbar from '../layout/Topbar';
@@ -61,11 +64,14 @@ const AdminDashboard: React.FC = () => {
 
   const tabs = [
     { id: 'overview', label: 'Resumen', icon: Home },
-    { id: 'sensors', label: 'Sensores', icon: Activity },
+    { id: 'sensors', label: 'Monitoreo Sensores', icon: Activity },
     { id: 'analytics', label: 'Análisis', icon: PieChart },
     { id: 'map', label: 'Mapa', icon: MapPin },
     { id: 'parcels', label: 'Parcelas', icon: Database },
-    { id: 'alerts', label: 'Alertas', icon: Bell },
+    { id: 'cultivos', label: 'Cultivos', icon: Leaf },
+    { id: 'sensors-crud', label: 'Gestión Sensores', icon: Activity },
+    { id: 'users', label: 'Usuarios', icon: Users },
+    { id: 'alerts', label: 'Monitoreo Logs', icon: Bell },
   ];
 
   // Funciones de manejo
@@ -107,7 +113,7 @@ const AdminDashboard: React.FC = () => {
             <StatsGrid stats={dashboardStats} />
 
             {/* Sensores en Tiempo Real */}
-            <RealTimeSensors />
+            <SensorMonitor />
 
             {/* Parcelas Recientes */}
             <div className="bg-white/90 backdrop-blur-lg rounded-2xl shadow-lg border border-white/20 p-6">
@@ -151,7 +157,7 @@ const AdminDashboard: React.FC = () => {
                 </button>
               </div>
             </div>
-            <RealTimeSensors />
+            <SensorMonitor />
             <SensorCharts data={[]} />
           </div>
         );
@@ -177,15 +183,24 @@ const AdminDashboard: React.FC = () => {
                 Mapa de Parcelas
               </h2>
             </div>
-            <ParcelMap />
+            <MapaParcelas />
           </div>
         );
 
       case 'parcels':
         return <ParcelsCRUD />;
 
+      case 'cultivos':
+        return <CultivosCRUD />;
+
+      case 'sensors-crud':
+        return <SensorsCRUD />;
+
+      case 'users':
+        return <UsersCRUD />;
+
       case 'alerts':
-        return <AlertsPage />;
+        return <LogsPage />;
 
       default:
         return null;

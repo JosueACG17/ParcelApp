@@ -1,87 +1,121 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { 
+  Plus, 
   Edit, 
   Trash2, 
+  Search, 
   User as UserIcon,
   Mail,
   Phone,
   Shield,
-  Calendar
+  RotateCcw,
+  UserPlus
 } from 'lucide-react';
+import Modal from '../ui/Modal';
 import ConfirmModal from '../ui/ConfirmModal';
-import PageHeader from '../ui/PageHeader';
-import { SearchAndFilter } from '../ui/SearchAndFilter';
-import { DataTable } from '../ui/DataTable';
-import { DynamicFormModal } from '../ui/DynamicFormModal';
-import type { TableColumn, TableAction } from '../ui/DataTable';
-import type {User} from '../../types/auth';
+import { useUsers } from '../../hooks/useUsersData';
+import { useRoles } from '../../hooks/useSystemData';
+import { authService } from '../../services/authService';
+import type { User } from '../../types/auth';
 
-const UsersCRUD: React.FC = () => {
-  const [users, setUsers] = useState<User[]>([
-    {
-      id: '1',
-      name: 'Juan Pérez',
-      email: 'juan@parcelas.com',
-      phone: '+57 300 123 4567',
-      role: 'admin',
-      status: 'active',
-      createdAt: '2024-01-15T10:00:00Z',
-      updatedAt: '2024-03-15T14:30:00Z'
-    },
-    {
-      id: '2',
-      name: 'María García',
-      email: 'maria@parcelas.com',
-      phone: '+57 300 987 6543',
-      role: 'manager', 
-      status: 'active',
-      createdAt: '2024-02-01T09:00:00Z',
-      updatedAt: '2024-02-01T09:00:00Z'
-    },
-    {
-      id: '3',
-      name: 'Carlos López',
-      email: 'carlos@parcelas.com',
-      phone: '+57 301 555 7890',
-      role: 'worker',
-      status: 'pending',
-      createdAt: '2024-03-10T16:00:00Z',
-      updatedAt: '2024-03-10T16:00:00Z'
-    }
-  ]);
+interface UserFormData {
+  nombre: string;
+  correo: string;
+  password?: string;
+  telefono: string;
+  role: string;
+}
 
-  const [filteredUsers, setFilteredUsers] = useState<User[]>(users);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+const UsuariosCRUD: React.FC = () => {
+  const { users, loading, error, updateUser, deleteUser, restoreUser } = useUsers();
+  const { roles } = useRoles();
+  
+  // Estados locales
   const [searchTerm, setSearchTerm] = useState('');
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
   // Filtros
-  useEffect(() => {
-    let filtered = users;
-
-    if (searchTerm) {
-      filtered = filtered.filter(user => 
-        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.role.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = searchTerm === '' || 
+      user.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.correo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (user.role || '').toLowerCase().includes(searchTerm.toLowerCase());
+    
+    let matchesStatus = true;
+    if (statusFilter === 'active') {
+      matchesStatus = !user.isDeleted;
+    } else if (statusFilter === 'inactive') {
+      matchesStatus = user.isDeleted;
     }
+    
+    return matchesSearch && matchesStatus;
+  });
 
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(user => user.status === statusFilter);
+  // Manejadores
+  const handleCreate = async (formData: UserFormData) => {
+    try {
+      // Crear usuario usando el servicio de registro
+      await authService.register({
+        nombre: formData.nombre,
+        correo: formData.correo,
+        password: formData.password || 'DefaultPassword123!',
+        telefono: formData.telefono
+      });
+      
+      setShowCreateModal(false);
+      // Refrescar la lista después de crear
+      window.location.reload(); // Temporal hasta tener mejor refresh
+    } catch (error) {
+      console.error('Error al crear usuario:', error);
+      alert('Error al crear usuario. Verifique que el correo no esté ya registrado.');
     }
+  };
 
-    setFilteredUsers(filtered);
-  }, [users, searchTerm, statusFilter]);
+  const handleEdit = async (formData: UserFormData) => {
+    if (!selectedUser) return;
+    
+    try {
+      await updateUser(selectedUser.id, {
+        nombre: formData.nombre,
+        correo: formData.correo,
+        telefono: formData.telefono
+      });
+      setShowEditModal(false);
+      setSelectedUser(null);
+    } catch (error) {
+      console.error('Error al actualizar usuario:', error);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selectedUser) return;
+    
+    try {
+      await deleteUser(selectedUser.id);
+      setShowDeleteModal(false);
+      setSelectedUser(null);
+    } catch (error) {
+      console.error('Error al eliminar usuario:', error);
+    }
+  };
+
+  const handleRestore = async (user: User) => {
+    try {
+      await restoreUser(user.id);
+    } catch (error) {
+      console.error('Error al restaurar usuario:', error);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active': return 'bg-green-100 text-green-800';
       case 'inactive': return 'bg-red-100 text-red-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -90,282 +124,358 @@ const UsersCRUD: React.FC = () => {
     switch (status) {
       case 'active': return 'Activo';
       case 'inactive': return 'Inactivo';
-      case 'pending': return 'Pendiente';
       default: return 'Desconocido';
     }
   };
 
   const getRoleColor = (role: string) => {
-    switch (role) {
+    switch (role.toLowerCase()) {
       case 'admin': return 'bg-purple-100 text-purple-800';
-      case 'manager': return 'bg-blue-100 text-blue-800';
-      case 'worker': return 'bg-orange-100 text-orange-800';
+      case 'user': return 'bg-blue-100 text-blue-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getRoleText = (role: string) => {
-    switch (role) {
+    switch (role.toLowerCase()) {
       case 'admin': return 'Administrador';
-      case 'manager': return 'Gerente';
-      case 'worker': return 'Trabajador';
+      case 'user': return 'Usuario';
       default: return 'Sin rol';
     }
   };
 
-  const handleCreate = (userData: Omit<User, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const newUser: User = {
-      ...userData,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    setUsers([...users, newUser]);
-    setIsCreateModalOpen(false);
-  };
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+      </div>
+    );
+  }
 
-  const handleUpdate = (userData: Omit<User, 'createdAt' | 'updatedAt'>) => {
-    setUsers(users.map(user => 
-      user.id === userData.id 
-        ? { ...userData, updatedAt: new Date().toISOString(), createdAt: user.createdAt }
-        : user
-    ));
-    setIsEditModalOpen(false);
-    setSelectedUser(null);
-  };
-
-  const handleDelete = () => {
-    if (selectedUser) {
-      setUsers(users.filter(user => user.id !== selectedUser.id));
-      setSelectedUser(null);
-    }
-  };
-
-  // Configuración de campos del formulario
-  const userFormFields = [
-    {
-      name: 'name',
-      label: 'Nombre Completo',
-      type: 'text' as const,
-      required: true,
-      placeholder: 'Ej: Juan Pérez'
-    },
-    {
-      name: 'email',
-      label: 'Correo Electrónico',
-      type: 'email' as const,
-      required: true,
-      placeholder: 'correo@ejemplo.com'
-    },
-    {
-      name: 'phone',
-      label: 'Teléfono',
-      type: 'text' as const,
-      placeholder: '+57 300 123 4567'
-    },
-    {
-      name: 'password',
-      label: 'Contraseña',
-      type: 'password' as const,
-      required: !selectedUser, // Solo requerida para nuevos usuarios
-      placeholder: selectedUser ? 'Dejar vacío para mantener actual' : 'Mínimo 6 caracteres'
-    },
-    {
-      name: 'role',
-      label: 'Rol',
-      type: 'select' as const,
-      required: true,
-      options: [
-        { value: 'worker', label: 'Trabajador' },
-        { value: 'manager', label: 'Gerente' },
-        { value: 'admin', label: 'Administrador' }
-      ]
-    },
-    {
-      name: 'status',
-      label: 'Estado',
-      type: 'select' as const,
-      required: true,
-      options: [
-        { value: 'pending', label: 'Pendiente' },
-        { value: 'active', label: 'Activo' },
-        { value: 'inactive', label: 'Inactivo' }
-      ]
-    }
-  ];
-
-  // Configuración de la tabla
-  const tableColumns: TableColumn<User>[] = [
-    {
-      key: 'user',
-      header: 'Usuario',
-      accessor: (user) => (
-        <div className="flex items-center">
-          <div className="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-lg flex items-center justify-center">
-            <UserIcon className="h-5 w-5 text-blue-600" />
-          </div>
-          <div className="ml-4">
-            <div className="text-sm font-medium text-gray-900">
-              {user.name}
-            </div>
-            <div className="text-sm text-gray-500">
-              ID: {user.id}
-            </div>
-          </div>
-        </div>
-      )
-    },
-    {
-      key: 'contact',
-      header: 'Contacto',
-      accessor: (user) => (
-        <div className="space-y-1">
-          <div className="flex items-center text-sm text-gray-900">
-            <Mail className="w-4 h-4 mr-2 text-gray-400" />
-            {user.email}
-          </div>
-          {user.phone && (
-            <div className="flex items-center text-sm text-gray-500">
-              <Phone className="w-4 h-4 mr-2 text-gray-400" />
-              {user.phone}
-            </div>
-          )}
-        </div>
-      )
-    },
-    {
-      key: 'role',
-      header: 'Rol',
-      accessor: (user) => (
-        <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(user.role)}`}>
-          <Shield className="w-3 h-3 mr-1" />
-          {getRoleText(user.role)}
-        </span>
-      )
-    },
-    {
-      key: 'status',
-      header: 'Estado',
-      accessor: (user) => (
-        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(user.status || 'pending')}`}>
-          {getStatusText(user.status || 'pending')}
-        </span>
-      )
-    },
-    {
-      key: 'date',
-      header: 'Fecha de Registro',
-      accessor: (user) => (
-        <div className="flex items-center text-xs text-gray-500">
-          <Calendar className="w-3 h-3 mr-1" />
-          {new Date(user.createdAt).toLocaleDateString('es-ES')}
-        </div>
-      )
-    }
-  ];
-
-  const tableActions: TableAction<User>[] = [
-    {
-      label: 'Editar',
-      icon: Edit,
-      onClick: (user) => {
-        setSelectedUser(user);
-        setIsEditModalOpen(true);
-      },
-      className: 'p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors',
-      title: 'Editar'
-    },
-    {
-      label: 'Eliminar',
-      icon: Trash2,
-      onClick: (user) => {
-        setSelectedUser(user);
-        setIsDeleteModalOpen(true);
-      },
-      className: 'p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors',
-      title: 'Eliminar'
-    }
-  ];
-
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-red-600 mb-2">Error al cargar usuarios</div>
+        <div className="text-sm text-gray-500">{error}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Gestión de Usuarios"
-        description="Administra todos los usuarios del sistema"
-        buttonText="Nuevo Usuario"
-        buttonColor="blue"
-        onButtonClick={() => setIsCreateModalOpen(true)}
-      />
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800">Gestión de Usuarios</h2>
+          <p className="text-gray-600">Administra los usuarios del sistema</p>
+        </div>
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-xl font-medium transition-colors flex items-center gap-2"
+        >
+          <UserPlus className="w-4 h-4" />
+          Nuevo Usuario
+        </button>
+      </div>
 
-      <SearchAndFilter
-        searchValue={searchTerm}
-        onSearchChange={setSearchTerm}
-        searchPlaceholder="Buscar por nombre, correo o rol..."
-        filterValue={statusFilter}
-        onFilterChange={setStatusFilter}
-        filterOptions={[
-          { value: 'all', label: 'Todos los estados' },
-          { value: 'active', label: 'Activos' },
-          { value: 'inactive', label: 'Inactivos' },
-          { value: 'pending', label: 'Pendientes' }
-        ]}
-      />
+      {/* Filtros */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Buscar usuarios..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          >
+            <option value="all">Todos los estados</option>
+            <option value="active">Activos</option>
+            <option value="inactive">Inactivos</option>
+          </select>
+        </div>
+      </div>
 
-      <DataTable
-        data={filteredUsers}
-        columns={tableColumns}
-        actions={tableActions}
-        keyExtractor={(user) => user.id}
-        emptyState={{
-          icon: UserIcon,
-          title: 'No hay usuarios',
-          description: searchTerm || statusFilter !== 'all' 
-            ? 'No se encontraron usuarios con los filtros aplicados'
-            : 'Comienza creando tu primer usuario'
-        }}
-      />
+      {/* Lista de usuarios */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+        {filteredUsers.length === 0 ? (
+          <div className="text-center py-12">
+            <UserIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No hay usuarios configurados
+            </h3>
+            <p className="text-gray-500 mb-4">
+              Crea el primer usuario para empezar.
+            </p>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            >
+              Crear primer usuario
+            </button>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-200">
+            {filteredUsers.map((user) => (
+              <motion.div
+                key={user.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`p-6 hover:bg-gray-50 transition-colors ${
+                  user.isDeleted ? 'opacity-60' : ''
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                      <UserIcon className="w-6 h-6 text-blue-600" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-1">
+                        <h3 className="font-semibold text-gray-900">
+                          {user.nombre}
+                          {user.isDeleted && (
+                            <span className="ml-2 text-xs text-red-600 bg-red-100 px-2 py-1 rounded-full">
+                              Eliminado
+                            </span>
+                          )}
+                        </h3>
+                        <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(user.role || 'User')}`}>
+                          <Shield className="w-3 h-3 mr-1" />
+                          {getRoleText(user.role || 'User')}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center gap-4 text-sm text-gray-500">
+                        <div className="flex items-center gap-1">
+                          <Mail className="w-3 h-3" />
+                          {user.correo}
+                        </div>
+                        {user.telefono && (
+                          <div className="flex items-center gap-1">
+                            <Phone className="w-3 h-3" />
+                            {user.telefono}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-4">
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(user.isDeleted ? 'inactive' : 'active')}`}>
+                      {getStatusText(user.isDeleted ? 'inactive' : 'active')}
+                    </span>
+                    
+                    <div className="flex items-center gap-2">
+                      {user.isDeleted ? (
+                        <button
+                          onClick={() => handleRestore(user)}
+                          className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                          title="Restaurar"
+                        >
+                          <RotateCcw className="w-4 h-4" />
+                        </button>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => {
+                              setSelectedUser(user);
+                              setShowEditModal(true);
+                            }}
+                            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Editar"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedUser(user);
+                              setShowDeleteModal(true);
+                            }}
+                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Eliminar"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </div>
 
-      {/* Modales */}
-      <DynamicFormModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onSubmit={handleCreate}
-        title="Nuevo Usuario"
-        fields={userFormFields}
-        submitButtonColor="blue"
-      />
+      {/* Modal de crear usuario */}
+      <Modal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        title="Crear Nuevo Usuario"
+      >
+        <UserForm onSubmit={handleCreate} roles={roles} isCreate />
+      </Modal>
 
-      <DynamicFormModal
-        isOpen={isEditModalOpen}
+      {/* Modal de editar usuario */}
+      <Modal
+        isOpen={showEditModal}
         onClose={() => {
-          setIsEditModalOpen(false);
+          setShowEditModal(false);
           setSelectedUser(null);
         }}
-        onSubmit={handleUpdate}
         title="Editar Usuario"
-        fields={userFormFields}
-        initialData={selectedUser || undefined}
-        submitButtonColor="blue"
-      />
+      >
+        <UserForm
+          initialData={selectedUser ? {
+            nombre: selectedUser.nombre,
+            correo: selectedUser.correo,
+            telefono: selectedUser.telefono,
+            role: selectedUser.role || 'User'
+          } : undefined}
+          onSubmit={handleEdit}
+          roles={roles}
+        />
+      </Modal>
 
+      {/* Modal de confirmación de eliminación */}
       <ConfirmModal
-        isOpen={isDeleteModalOpen}
+        isOpen={showDeleteModal}
+        onConfirm={handleDelete}
         onClose={() => {
-          setIsDeleteModalOpen(false);
+          setShowDeleteModal(false);
           setSelectedUser(null);
         }}
-        onConfirm={handleDelete}
         title="Eliminar Usuario"
-        message={`¿Estás seguro de que deseas eliminar al usuario "${selectedUser?.name}"? Esta acción no se puede deshacer.`}
-        type="danger"
-        confirmText="Eliminar"
-        cancelText="Cancelar"
+        message={`¿Estás seguro de que deseas eliminar al usuario "${selectedUser?.nombre}"? Esta acción no se puede deshacer.`}
       />
     </div>
   );
 };
 
+// Componente del formulario de usuario
+interface UserFormProps {
+  initialData?: UserFormData;
+  onSubmit: (data: UserFormData) => void;
+  roles: Array<{ id: number; nombre: string; descripcion?: string }>;
+  isCreate?: boolean;
+}
 
+const UserForm: React.FC<UserFormProps> = ({ initialData, onSubmit, roles, isCreate = false }) => {
+  const [formData, setFormData] = useState<UserFormData>(
+    initialData || {
+      nombre: '',
+      correo: '',
+      password: '',
+      telefono: '',
+      role: 'User'
+    }
+  );
 
-export default UsersCRUD;
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Nombre Completo
+        </label>
+        <input
+          type="text"
+          value={formData.nombre}
+          onChange={(e) => setFormData(prev => ({ ...prev, nombre: e.target.value }))}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          placeholder="Ej: Juan Pérez"
+          required
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Correo Electrónico
+        </label>
+        <input
+          type="email"
+          value={formData.correo}
+          onChange={(e) => setFormData(prev => ({ ...prev, correo: e.target.value }))}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          placeholder="correo@ejemplo.com"
+          required
+          disabled={!isCreate} // No permitir cambiar correo en edición
+        />
+      </div>
+
+      {isCreate && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Contraseña
+          </label>
+          <input
+            type="password"
+            value={formData.password}
+            onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            placeholder="Mínimo 6 caracteres"
+            minLength={6}
+            required
+          />
+        </div>
+      )}
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Teléfono
+        </label>
+        <input
+          type="tel"
+          value={formData.telefono}
+          onChange={(e) => setFormData(prev => ({ ...prev, telefono: e.target.value }))}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          placeholder="+57 300 123 4567"
+          required
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Rol
+        </label>
+        <select
+          value={formData.role}
+          onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          required
+        >
+          {roles.map(role => (
+            <option key={role.id} value={role.nombre}>
+              {role.nombre} {role.descripcion && `- ${role.descripcion}`}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="flex gap-3 pt-4">
+        <button
+          type="submit"
+          className="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg font-medium transition-colors"
+        >
+          {isCreate ? 'Crear Usuario' : 'Actualizar Usuario'}
+        </button>
+      </div>
+    </form>
+  );
+};
+
+export default UsuariosCRUD;

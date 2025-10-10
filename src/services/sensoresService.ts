@@ -20,11 +20,6 @@ class SensoresService {
     return response.data!;
   }
 
-  async getSensoresByParcela(parcelaId: string): Promise<Sensor[]> {
-    const response = await apiService.get<Sensor[]>(API_ENDPOINTS.SENSORES_BY_PARCELA(parcelaId));
-    return response.data || [];
-  }
-
   async createSensor(sensorData: CreateSensorRequest): Promise<Sensor> {
     const response = await apiService.post<Sensor>(
       API_ENDPOINTS.SENSORES,
@@ -51,8 +46,8 @@ class SensoresService {
     return response.data || [];
   }
 
-  async createLectura(lecturaData: CreateLecturaRequest): Promise<{ message: string }> {
-    const response = await apiService.post<{ message: string }>(
+  async createLectura(lecturaData: CreateLecturaRequest): Promise<Lectura> {
+    const response = await apiService.post<Lectura>(
       API_ENDPOINTS.LECTURAS,
       lecturaData
     );

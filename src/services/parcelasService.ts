@@ -83,8 +83,12 @@ class ParcelasService {
     return response.data!;
   }
 
-  async updateCultivo(id: number, cultivoData: UpdateCultivoRequest): Promise<void> {
-    await apiService.put(API_ENDPOINTS.CULTIVO_BY_ID(id), cultivoData);
+  async updateCultivo(id: number, cultivoData: UpdateCultivoRequest): Promise<Cultivo> {
+    const response = await apiService.put<Cultivo>(
+      API_ENDPOINTS.CULTIVO_BY_ID(id),
+      cultivoData
+    );
+    return response.data!;
   }
 
   async deleteCultivo(id: number): Promise<void> {

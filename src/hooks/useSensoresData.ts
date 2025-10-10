@@ -26,11 +26,10 @@ export const useSensores = () => {
   }, []);
 
   const createSensor = async (sensorData: {
-    _id: string;
     nombre: string;
     tipo: 'temperatura' | 'humedad' | 'radiacion_solar' | 'lluvia';
-    id_parcela_sql: string;
-    cultivo?: string;
+    ubicacion: string;
+    estado: 'activo' | 'inactivo' | 'mantenimiento';
   }) => {
     try {
       const newSensor = await sensoresService.createSensor(sensorData);
@@ -43,12 +42,44 @@ export const useSensores = () => {
     }
   };
 
+  const updateSensor = async (id: string, sensorData: {
+    nombre?: string;
+    tipo?: 'temperatura' | 'humedad' | 'radiacion_solar' | 'lluvia';
+    ubicacion?: string;
+    estado?: 'activo' | 'inactivo' | 'mantenimiento';
+  }) => {
+    try {
+      const updatedSensor = await sensoresService.updateSensor(id, sensorData);
+      setSensores(prev => prev.map(sensor => 
+        sensor._id === id ? updatedSensor : sensor
+      ));
+      return updatedSensor;
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al actualizar el sensor';
+      setError(errorMessage);
+      throw err;
+    }
+  };
+
+  const deleteSensor = async (id: string) => {
+    try {
+      await sensoresService.deleteSensor(id);
+      setSensores(prev => prev.filter(sensor => sensor._id !== id));
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al eliminar el sensor';
+      setError(errorMessage);
+      throw err;
+    }
+  };
+
   return {
     sensores,
     loading,
     error,
     refetch: fetchSensores,
     createSensor,
+    updateSensor,
+    deleteSensor,
   };
 };
 
@@ -77,19 +108,13 @@ export const useLecturas = () => {
 
   const createLectura = async (lecturaData: {
     sensorId: string;
-    value: number;
-    unit: string;
-    timestamp: string;
-    coords: {
-      lat: number;
-      lon: number;
-    };
+    valor: number;
+    unidad: string;
   }) => {
     try {
-      const response = await sensoresService.createLectura(lecturaData);
-      // Refetch lecturas since API only returns success message
-      await fetchLecturas();
-      return response;
+      const newLectura = await sensoresService.createLectura(lecturaData);
+      setLecturas(prev => [...prev, newLectura]);
+      return newLectura;
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Error al crear la lectura';
       setError(errorMessage);

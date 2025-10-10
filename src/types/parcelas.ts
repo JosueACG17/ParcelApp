@@ -42,54 +42,44 @@ export interface UpdateCultivoRequest {
 export interface Sensor {
   _id: string;
   nombre: string;
-  cultivo: string;
   tipo: 'temperatura' | 'humedad' | 'radiacion_solar' | 'lluvia';
-  id_parcela_sql: string; // GUID de la parcela
-  fecha_instalacion: string; // ISO 8601
+  ubicacion: string;
+  estado: 'activo' | 'inactivo' | 'mantenimiento';
+  fechaCreacion: string; // ISO 8601
 }
 
 export interface CreateSensorRequest {
-  _id: string; // ID único del sensor
   nombre: string;
-  cultivo?: string;
   tipo: 'temperatura' | 'humedad' | 'radiacion_solar' | 'lluvia';
-  id_parcela_sql: string; // GUID de la parcela
+  ubicacion: string;
+  estado: 'activo' | 'inactivo' | 'mantenimiento';
 }
 
 export interface UpdateSensorRequest {
   nombre?: string;
-  cultivo?: string;
   tipo?: 'temperatura' | 'humedad' | 'radiacion_solar' | 'lluvia';
-  id_parcela_sql?: string;
+  ubicacion?: string;
+  estado?: 'activo' | 'inactivo' | 'mantenimiento';
 }
 
 // Tipos para Lecturas (Node.js service)
 export interface Lectura {
   _id: string;
   sensorId: string;
-  tipo: 'temperatura' | 'humedad' | 'radiacion_solar' | 'lluvia';
-  value: number;
-  unit: string;
+  valor: number;
+  unidad: string;
   timestamp: string; // ISO 8601
-  coords: {
-    lat: number;
-    lon: number;
-  };
 }
 
 export interface CreateLecturaRequest {
   sensorId: string;
-  value: number;
-  unit: string;
-  timestamp: string; // ISO 8601
-  coords: {
-    lat: number;
-    lon: number;
-  };
+  valor: number;
+  unidad: string;
 }
 
 // Tipo para el endpoint del gateway (parcela detallada)
 export interface ParcelaDetallada {
   parcela: Parcela;
   sensores: Sensor[];
+  ultimasLecturas: Lectura[];
 }
