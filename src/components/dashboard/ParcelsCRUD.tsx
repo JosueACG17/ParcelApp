@@ -12,7 +12,6 @@ import {
 } from 'lucide-react';
 import Modal from '../ui/Modal';
 import ConfirmModal from '../ui/ConfirmModal';
-import ExportButton from '../ui/ExportButton';
 import { useParcelas, useCultivos } from '../../hooks/useParcelasData';
 import type { Parcela } from '../../types/parcelas';
 
@@ -118,11 +117,6 @@ const ParcelsCRUD: React.FC = () => {
           <p className="text-gray-600">Administra las parcelas de tu campo</p>
         </div>
         <div className="flex space-x-3">
-          <ExportButton 
-            data={filteredParcelas} 
-            filename="parcelas" 
-            onExport={(format) => console.log(`Exportando ${format}`)}
-          />
           <button
             onClick={() => setShowCreateModal(true)}
             className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
