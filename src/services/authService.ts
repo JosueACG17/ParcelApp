@@ -124,7 +124,8 @@ class AuthService {
           nombre: payload.name,
           correo: payload.email,
           telefono: '', // No está en el token, se puede obtener después
-          isDeleted: false
+          isDeleted: false,
+          role: payload.role || 'User' // Extraer el rol del token
         };
       }
     } catch {

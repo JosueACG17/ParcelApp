@@ -35,7 +35,7 @@ const Topbar: React.FC<TopbarProps> = ({
             
             <div>
               <h1 className="text-2xl font-bold text-gray-800">
-                ¡Bienvenido de nuevo, {user?.name}!
+                ¡Bienvenido de nuevo, {user?.nombre}!
               </h1>
               <p className="text-gray-600 capitalize">
                 {formatFullDate(new Date())}

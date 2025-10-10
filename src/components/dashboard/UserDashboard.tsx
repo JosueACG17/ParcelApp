@@ -173,7 +173,7 @@ const UserDashboard: React.FC = () => {
               </div>
               <div className="flex-1">
                 <p className="font-semibold text-gray-800 text-sm">
-                  {user?.name}
+                  {user?.nombre}
                 </p>
                 <p className="text-xs text-gray-500">Usuario</p>
               </div>

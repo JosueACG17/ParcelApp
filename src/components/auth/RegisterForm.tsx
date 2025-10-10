@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { registerSchema, type RegisterFormData } from "../../utils/validation";
 import { useAuthStore } from "../../stores/authStore";
+import SuccessModal from "../ui/SuccessModal";
 import {
   FaEnvelope,
   FaLock,
@@ -19,7 +20,17 @@ const RegisterForm: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const { register: registerUser, isLoading, error } = useAuthStore();
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [registeredUserName, setRegisteredUserName] = useState('');
+  const { register: registerUser, isLoading, error, isAuthenticated } = useAuthStore();
+  const navigate = useNavigate();
+
+  // Redirigir si ya está autenticado
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   useEffect(() => {
     setMounted(true);
@@ -41,11 +52,20 @@ const RegisterForm: React.FC = () => {
       password: data.password,
       telefono: data.telefono
     });
-    if (!success) {
+    if (success) {
+      setRegisteredUserName(data.name);
+      setShowSuccessModal(true);
+    } else {
       setError("root", {
         message: "Error al crear la cuenta. Inténtalo de nuevo.",
       });
     }
+  };
+
+  const handleSuccessModalClose = () => {
+    setShowSuccessModal(false);
+    // Navegar al login después de cerrar el modal
+    navigate('/login');
   };
 
   return (
@@ -466,6 +486,16 @@ const RegisterForm: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal de éxito */}
+      <SuccessModal
+        isOpen={showSuccessModal}
+        onClose={handleSuccessModalClose}
+        title="¡Cuenta Creada Exitosamente!"
+        message={`¡Bienvenido, ${registeredUserName}! Tu cuenta ha sido creada correctamente. Ahora puedes iniciar sesión con tus credenciales.`}
+        autoClose={true}
+        autoCloseDelay={4000}
+      />
     </div>
   );
 };

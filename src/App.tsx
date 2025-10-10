@@ -6,7 +6,6 @@ import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import NotFoundPage from './pages/NotFoundPage';
 import ProtectedRoute from './components/layout/ProtectedRoute';
-import UserDashboard from './components/dashboard/UserDashboard';
 
 function App() {
   const { isAuthenticated } = useAuthStore();
@@ -21,21 +20,11 @@ function App() {
         {/* Rutas públicas */}
         <Route 
           path="/login" 
-          element={
-            isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage />
-          } 
+          element={<LoginPage />} 
         />
         <Route 
           path="/register" 
-          element={
-            isAuthenticated ? <Navigate to="/dashboard" replace /> : <RegisterPage />
-          } 
-        />
-        <Route 
-          path="/dashboard-user" 
-          element={
-            isAuthenticated ? <Navigate to="/dashboard-user" replace /> : <UserDashboard />
-          } 
+          element={<RegisterPage />} 
         />
         
         {/* Rutas protegidas */}
@@ -47,7 +36,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-        
         
         {/* Redirección por defecto */}
         <Route 

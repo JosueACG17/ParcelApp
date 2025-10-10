@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { STATUS_COLORS, HEALTH_COLORS } from '../../constants/dashboard';
 
 export interface ParcelCardData {
-  id: string;
+  id: number;
   name: string;
   status: string;
   crop: string;
