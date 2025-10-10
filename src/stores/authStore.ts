@@ -46,6 +46,15 @@ export const useAuthStore = create<AuthStore>()((set) => ({
         isLoading: false,
         error: null,
       });
+    } else {
+      // Si no hay token o user válidos, asegurarse de limpiar el estado
+      set({
+        user: null,
+        token: null,
+        isAuthenticated: false,
+        isLoading: false,
+        error: null,
+      });
     }
   },
 
@@ -56,6 +65,7 @@ export const useAuthStore = create<AuthStore>()((set) => ({
       const response = await authService.login(credentials);
       
       set({
+        user: response.user,
         token: response.token,
         isAuthenticated: true,
         isLoading: false,

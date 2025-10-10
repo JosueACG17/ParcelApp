@@ -21,6 +21,7 @@ export interface RegisterCredentials {
 
 export interface LoginResponse {
   token: string;
+  user: User;
 }
 
 export interface RegisterResponse {
