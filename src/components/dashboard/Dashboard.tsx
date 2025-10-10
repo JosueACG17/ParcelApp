@@ -158,7 +158,7 @@ const AdminDashboard: React.FC = () => {
               </div>
             </div>
             <SensorMonitor />
-            <SensorCharts data={[]} />
+            <SensorCharts />
           </div>
         );
 
@@ -171,7 +171,7 @@ const AdminDashboard: React.FC = () => {
               </h2>
             </div>
             <ProductionCharts />
-            <SensorCharts data={[]} />
+            <SensorCharts />
           </div>
         );
 

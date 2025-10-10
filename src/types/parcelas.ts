@@ -42,24 +42,26 @@ export interface UpdateCultivoRequest {
 export interface Sensor {
   _id: string;
   nombre: string;
+  cultivo: string;
   tipo: 'temperatura' | 'humedad' | 'radiacion_solar' | 'lluvia';
-  ubicacion: string;
-  estado: 'activo' | 'inactivo' | 'mantenimiento';
-  fechaCreacion: string; // ISO 8601
+  id_parcela_sql: string;
+  fecha_instalacion: string; // ISO 8601
+  createdAt: string; // ISO 8601
+  updatedAt: string; // ISO 8601
 }
 
 export interface CreateSensorRequest {
   nombre: string;
+  cultivo: string;
   tipo: 'temperatura' | 'humedad' | 'radiacion_solar' | 'lluvia';
-  ubicacion: string;
-  estado: 'activo' | 'inactivo' | 'mantenimiento';
+  id_parcela_sql: string;
 }
 
 export interface UpdateSensorRequest {
   nombre?: string;
+  cultivo?: string;
   tipo?: 'temperatura' | 'humedad' | 'radiacion_solar' | 'lluvia';
-  ubicacion?: string;
-  estado?: 'activo' | 'inactivo' | 'mantenimiento';
+  id_parcela_sql?: string;
 }
 
 // Tipos para Lecturas (Node.js service)

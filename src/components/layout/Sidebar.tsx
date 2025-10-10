@@ -1,8 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { useAuthStore } from '../../stores/authStore';
 import type { DashboardTab } from '../../constants/dashboard';
-import { Leaf, X, Users, LogOut } from 'lucide-react';
+import { Leaf, X, LogOut } from 'lucide-react';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -26,7 +25,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   tabs,
   onLogout
 }) => {
-  const { user } = useAuthStore();
+
 
   return (
     <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white/95 backdrop-blur-lg shadow-xl transform transition-transform duration-300 ease-in-out ${
@@ -79,17 +78,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* User Info */}
-        <div className="mt-8 pt-6 border-t border-gray-200">
-          <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-xl">
-            <div className="w-10 h-10 bg-gradient-to-r from-green-700 to-green-400 rounded-full flex items-center justify-center">
-              <Users className="w-5 h-5 text-white" />
-            </div>
-            <div className="flex-1">
-              <p className="font-semibold text-gray-800 text-sm">{user?.nombre}</p>
-              <p className="text-xs text-gray-500">Administrador</p>
-            </div>
-          </div>
-          
+        <div className="mt-8 pt-6 border-t border-gray-200">    
           <button
             onClick={onLogout}
             className="cursor-pointer w-full mt-4 flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors font-medium"

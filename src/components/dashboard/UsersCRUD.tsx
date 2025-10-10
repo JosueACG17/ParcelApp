@@ -43,10 +43,14 @@ const UsersCRUD: React.FC = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
-
+  // Normalizar usuarios para asegurar que tengan roles
+  const normalizedUsers = users.map(user => ({
+    ...user,
+    roles: user.roles || ['User'] // Asegurar que siempre haya al menos un rol
+  }));
 
   // Filtros
-  const filteredUsers = users.filter(user => {
+  const filteredUsers = normalizedUsers.filter(user => {
     const matchesSearch = searchTerm === '' || 
       user.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.correo.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -247,9 +251,9 @@ const UsersCRUD: React.FC = () => {
                             </span>
                           )}
                         </h3>
-                        <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(user.roles[0] || 'User')}`}>
+                        <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(user.roles[0])}`}>
                           <Shield className="w-3 h-3 mr-1" />
-                          {getRoleText(user.roles[0] || 'User')}
+                          {getRoleText(user.roles[0])}
                         </span>
                       </div>
                       
@@ -338,7 +342,7 @@ const UsersCRUD: React.FC = () => {
             nombre: selectedUser.nombre,
             correo: selectedUser.correo,
             telefono: selectedUser.telefono,
-            role: selectedUser.roles[0] || 'User'
+            role: (selectedUser.roles && selectedUser.roles[0]) || 'User'
           } : undefined}
           onSubmit={handleEdit}
           roles={roles}

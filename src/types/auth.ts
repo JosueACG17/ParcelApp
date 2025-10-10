@@ -4,7 +4,7 @@ export interface User {
   correo: string;
   telefono: string;
   isDeleted: boolean;
-  roles: string[]; // Array de roles del usuario (Admin, User, etc.)
+  roles?: string[]; 
 }
 
 export interface LoginCredentials {

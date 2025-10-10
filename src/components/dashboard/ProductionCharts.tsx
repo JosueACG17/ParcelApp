@@ -43,40 +43,39 @@ const ProductionCharts: React.FC = () => {
     }));
   }, [parcelas]);
 
-  // Generar datos de producción simulados
+  // Generar datos de producción simulados basados en cultivos reales
   const productionData: ProductionData[] = useMemo(() => {
     const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'];
-    const cultivoNames = cropData.map(c => c.name.toLowerCase().replace(/\s+/g, ''));
+    
+    // Si no hay cultivos reales, usar datos mínimos básicos
+    if (cropData.length === 0) {
+      return months.map(month => ({
+        month,
+        maiz: Math.floor(Math.random() * 50) + 70,
+        soja: Math.floor(Math.random() * 50) + 60
+      }));
+    }
     
     return months.map(month => {
       const data: ProductionData = { month };
-      cultivoNames.forEach(cultivo => {
-        // Simular producción mensual variable
-        data[cultivo] = Math.floor(Math.random() * 100) + 50;
+      cropData.forEach(cultivo => {
+        const cultivoKey = cultivo.name.toLowerCase().replace(/\s+/g, '');
+        // Simular producción mensual variable basada en el área del cultivo
+        const baseProduction = cultivo.area * 2; // Factor de producción
+        data[cultivoKey] = Math.floor(Math.random() * 40) + baseProduction;
       });
       return data;
     });
   }, [cropData]);
 
-  // Si no hay datos, mostrar datos de ejemplo
-  const fallbackCropData: CropData[] = [
-    { name: 'Maíz', value: 35, area: 54.8, color: '#22c55e' },
-    { name: 'Trigo', value: 25, area: 39.2, color: '#f59e0b' },
-    { name: 'Soja', value: 25, area: 39.2, color: '#3b82f6' },
-    { name: 'Girasol', value: 15, area: 23.6, color: '#f97316' }
+  // Datos por defecto si no hay cultivos (solo mostrará si realmente no hay nada)
+  const defaultCropData: CropData[] = cropData.length > 0 ? cropData : [
+    { name: 'Maíz', value: 60, area: 10, color: '#22c55e' },
+    { name: 'Soja', value: 40, area: 10, color: '#f59e0b' }
   ];
 
-  const fallbackProductionData: ProductionData[] = [
-    { month: 'Ene', maiz: 120, trigo: 80, soja: 95, girasol: 60 },
-    { month: 'Feb', maiz: 135, trigo: 85, soja: 100, girasol: 65 },
-    { month: 'Mar', maiz: 150, trigo: 90, soja: 110, girasol: 70 },
-    { month: 'Abr', maiz: 165, trigo: 95, soja: 105, girasol: 75 },
-    { month: 'May', maiz: 180, trigo: 100, soja: 120, girasol: 80 },
-    { month: 'Jun', maiz: 195, trigo: 110, soja: 125, girasol: 85 }
-  ];
-
-  const displayCropData = cropData.length > 0 ? cropData : fallbackCropData;
-  const displayProductionData = productionData.length > 0 ? productionData : fallbackProductionData;
+  const displayCropData = defaultCropData;
+  const displayProductionData = productionData;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -151,10 +150,15 @@ const ProductionCharts: React.FC = () => {
               }}
             />
             <Legend />
-            <Bar dataKey="maiz" fill="#22c55e" name="Maíz" radius={[2, 2, 0, 0]} />
-            <Bar dataKey="trigo" fill="#f59e0b" name="Trigo" radius={[2, 2, 0, 0]} />
-            <Bar dataKey="soja" fill="#3b82f6" name="Soja" radius={[2, 2, 0, 0]} />
-            <Bar dataKey="girasol" fill="#f97316" name="Girasol" radius={[2, 2, 0, 0]} />
+            {displayCropData.map((crop) => (
+              <Bar 
+                key={crop.name}
+                dataKey={crop.name.toLowerCase().replace(/\s+/g, '')} 
+                fill={crop.color} 
+                name={crop.name} 
+                radius={[2, 2, 0, 0]} 
+              />
+            ))}
           </BarChart>
         </ResponsiveContainer>
       </div>

@@ -162,7 +162,13 @@ export const useCultivos = () => {
   }) => {
     try {
       const newCultivo = await parcelasService.createCultivo(cultivoData);
-      setCultivos(prev => [...prev, newCultivo]);
+      
+      // Limpiar error previo si existía
+      setError(null);
+      
+      // Hacer refetch para obtener datos actualizados del servidor
+      await fetchCultivos();
+      
       return newCultivo;
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Error al crear el cultivo';
@@ -176,9 +182,13 @@ export const useCultivos = () => {
   }) => {
     try {
       const updatedCultivo = await parcelasService.updateCultivo(id, cultivoData);
-      setCultivos(prev => prev.map(cultivo => 
-        cultivo.id === id ? updatedCultivo : cultivo
-      ));
+      
+      // Limpiar error previo si existía
+      setError(null);
+      
+      // Hacer refetch para obtener datos actualizados del servidor
+      await fetchCultivos();
+      
       return updatedCultivo;
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Error al actualizar el cultivo';
@@ -190,7 +200,12 @@ export const useCultivos = () => {
   const deleteCultivo = async (id: number) => {
     try {
       await parcelasService.deleteCultivo(id);
-      setCultivos(prev => prev.filter(cultivo => cultivo.id !== id));
+      
+      // Limpiar error previo si existía
+      setError(null);
+      
+      // Hacer refetch para obtener datos actualizados del servidor
+      await fetchCultivos();
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Error al eliminar el cultivo';
       setError(errorMessage);
