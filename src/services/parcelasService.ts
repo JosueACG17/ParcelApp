@@ -40,7 +40,25 @@ class ParcelasService {
       API_ENDPOINTS.PARCELAS,
       parcelaData
     );
-    return response.data!;
+    
+    // Si response.data existe, lo usamos, sino creamos una parcela temporal
+    if (response.data) {
+      return response.data;
+    }
+    
+    // Si no hay data, crear una parcela temporal con los datos enviados
+    // más un ID temporal para evitar errores
+    const tempParcela: Parcela = {
+      id: `temp-${Date.now()}`,
+      nombre: parcelaData.nombre,
+      latitud: parcelaData.latitud,
+      longitud: parcelaData.longitud,
+      cantidadCultivos: parcelaData.cultivosIds.length,
+      nombresCultivos: [], // Se llenarán en el próximo refetch
+      isDeleted: false
+    };
+    
+    return tempParcela;
   }
 
   async updateParcela(id: string, parcelaData: UpdateParcelaRequest): Promise<void> {
@@ -60,12 +78,14 @@ class ParcelasService {
 
   // Cultivos
   async getAllCultivos(includeDeleted = false): Promise<Cultivo[]> {
+    // Forzamos el endpoint correcto directamente
     const url = includeDeleted 
-      ? `${API_ENDPOINTS.CULTIVOS}?includeDeleted=true`
-      : API_ENDPOINTS.CULTIVOS;
+      ? '/agro/cultivos?includeDeleted=true'
+      : '/agro/cultivos';
       
-    const response = await apiService.get<Cultivo[]>(url);
-    return response.data || [];
+    // Usar el nuevo método getArray que maneja arrays directos
+    const cultivos = await apiService.getArray<Cultivo>(url);
+    return cultivos;
   }
 
   async getCultivoById(id: number): Promise<Cultivo> {

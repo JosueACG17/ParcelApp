@@ -77,33 +77,6 @@ const ProductionCharts: React.FC = () => {
 
   const displayCropData = cropData.length > 0 ? cropData : fallbackCropData;
   const displayProductionData = productionData.length > 0 ? productionData : fallbackProductionData;
-  const RADIAN = Math.PI / 180;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: {
-    cx: number;
-    cy: number;
-    midAngle: number;
-    innerRadius: number;
-    outerRadius: number;
-    percent: number;
-  }) => {
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-    const x = cx + radius * Math.cos(-midAngle * RADIAN);
-    const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
-    return (
-      <text 
-        x={x} 
-        y={y} 
-        fill="white" 
-        textAnchor={x > cx ? 'start' : 'end'} 
-        dominantBaseline="central"
-        className="font-semibold text-sm"
-      >
-        {`${(percent * 100).toFixed(0)}%`}
-      </text>
-    );
-  };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

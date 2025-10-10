@@ -75,7 +75,7 @@ export const useDashboardData = () => {
         description: `${lecturasRecientes.length} recientes`
       },
       { 
-        title: 'Alertas Activas', 
+        title: 'Alertas ', 
         value: (alertStats.total - alertStats.resolved).toString(), 
         icon: Bell, 
         color: 'from-red-400 to-pink-500', 

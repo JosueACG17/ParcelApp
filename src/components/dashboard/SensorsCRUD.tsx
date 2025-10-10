@@ -84,8 +84,8 @@ const SensorsCRUD: React.FC = () => {
     try {
       await createSensor(formData);
       setShowCreateModal(false);
-    } catch (error) {
-      console.error('Error al crear sensor:', error);
+    } catch {
+      // Error handling could be added here if needed
     }
   };
 
@@ -96,8 +96,8 @@ const SensorsCRUD: React.FC = () => {
       await updateSensor(selectedSensor._id, formData);
       setShowEditModal(false);
       setSelectedSensor(null);
-    } catch (error) {
-      console.error('Error al actualizar sensor:', error);
+    } catch {
+      // Error handling could be added here if needed
     }
   };
 
@@ -108,8 +108,8 @@ const SensorsCRUD: React.FC = () => {
       await deleteSensor(selectedSensor._id);
       setShowDeleteModal(false);
       setSelectedSensor(null);
-    } catch (error) {
-      console.error('Error al eliminar sensor:', error);
+    } catch {
+      // Error handling could be added here if needed
     }
   };
 

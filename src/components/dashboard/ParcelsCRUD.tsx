@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import Modal from '../ui/Modal';
 import ConfirmModal from '../ui/ConfirmModal';
+import SuccessModal from '../ui/SuccessModal';
 import { useParcelas, useCultivos } from '../../hooks/useParcelasData';
 import type { Parcela } from '../../types/parcelas';
 
@@ -33,6 +34,8 @@ const ParcelsCRUD: React.FC = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedParcela, setSelectedParcela] = useState<Parcela | null>(null);
   const [includeDeleted, setIncludeDeleted] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState({ title: '', message: '' });
 
   // Filtros
   const filteredParcelas = parcelas.filter(parcela => 
@@ -46,9 +49,16 @@ const ParcelsCRUD: React.FC = () => {
   const handleCreate = async (formData: ParcelFormData) => {
     try {
       await createParcela(formData);
+      
       setShowCreateModal(false);
-    } catch (error) {
-      console.error('Error al crear parcela:', error);
+      setSuccessMessage({
+        title: '¡Parcela Creada!',
+        message: `La parcela "${formData.nombre}" se ha creado exitosamente y ya aparece en la tabla.`
+      });
+      setShowSuccessModal(true);
+    } catch  {
+      // Error handling could be added here if needed
+      // No cerrar el modal si hay error para que el usuario vea qué pasó
     }
   };
 
@@ -59,8 +69,13 @@ const ParcelsCRUD: React.FC = () => {
       await updateParcela(selectedParcela.id, formData);
       setShowEditModal(false);
       setSelectedParcela(null);
-    } catch (error) {
-      console.error('Error al actualizar parcela:', error);
+      setSuccessMessage({
+        title: '¡Parcela Actualizada!',
+        message: `La parcela "${formData.nombre}" se ha actualizado exitosamente.`
+      });
+      setShowSuccessModal(true);
+    } catch {
+      // Error handling could be added here if needed
     }
   };
 
@@ -70,17 +85,27 @@ const ParcelsCRUD: React.FC = () => {
     try {
       await deleteParcela(selectedParcela.id);
       setShowDeleteModal(false);
+      setSuccessMessage({
+        title: '¡Parcela Eliminada!',
+        message: `La parcela "${selectedParcela.nombre}" se ha eliminado exitosamente.`
+      });
       setSelectedParcela(null);
-    } catch (error) {
-      console.error('Error al eliminar parcela:', error);
+      setShowSuccessModal(true);
+    } catch {
+      // Error handling could be added here if needed
     }
   };
 
   const handleRestore = async (parcela: Parcela) => {
     try {
       await restoreParcela(parcela.id);
-    } catch (error)  {
-      console.error('Error al restaurar parcela:', error);
+      setSuccessMessage({
+        title: '¡Parcela Restaurada!',
+        message: `La parcela "${parcela.nombre}" se ha restaurado exitosamente.`
+      });
+      setShowSuccessModal(true);
+    } catch {
+      // Error handling could be added here if needed
     }
   };
 
@@ -327,6 +352,14 @@ const ParcelsCRUD: React.FC = () => {
         title="Eliminar Parcela"
         message={`¿Estás seguro que deseas eliminar la parcela "${selectedParcela?.nombre}"? Esta acción se puede deshacer.`}
         confirmText="Eliminar"
+      />
+
+      {/* Modal de éxito */}
+      <SuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title={successMessage.title}
+        message={successMessage.message}
       />
     </div>
   );

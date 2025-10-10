@@ -1,6 +1,32 @@
 import React from 'react';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { useParcelas } from '../../hooks/useParcelasData';
 import { MapPin, Leaf, Plus } from 'lucide-react';
+import L from 'leaflet';
+
+// Fix para los iconos de Leaflet
+import icon from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+import iconRetina from 'leaflet/dist/images/marker-icon-2x.png';
+
+// Configurar iconos por defecto
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: iconRetina,
+  iconUrl: icon,
+  shadowUrl: iconShadow,
+});
+
+// Icono personalizado para las parcelas
+const parcelaIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
 
 const MapaParcelas: React.FC = () => {
   const { parcelas, loading, error } = useParcelas();
@@ -81,14 +107,45 @@ const MapaParcelas: React.FC = () => {
           </div>
         ) : (
           <div>
-            {/* Simulación de mapa con coordenadas reales */}
-            <div className="bg-gray-100 rounded-xl p-6 mb-6">
-              <div className="text-center text-gray-600 mb-4">
-                📍 Mapa Interactivo (Centro: {centro.lat.toFixed(4)}, {centro.lng.toFixed(4)})
-              </div>
-              <div className="text-sm text-gray-500 text-center">
-                * Aquí iría el componente de mapa real (Google Maps, Leaflet, etc.)
-              </div>
+            {/* Mapa real con Leaflet */}
+            <div className="rounded-xl overflow-hidden mb-6" style={{ height: '400px' }}>
+              <MapContainer
+                center={[centro.lat, centro.lng]}
+                zoom={13}
+                style={{ height: '100%', width: '100%' }}
+                className="rounded-xl"
+              >
+                <TileLayer
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                {parcelasActivas.map((parcela) => (
+                  <Marker
+                    key={parcela.id}
+                    position={[parcela.latitud, parcela.longitud]}
+                    icon={parcelaIcon}
+                  >
+                    <Popup>
+                      <div className="p-2">
+                        <h4 className="font-semibold text-gray-900 mb-2">{parcela.nombre}</h4>
+                        <div className="space-y-1 text-sm">
+                          <div className="flex items-center gap-2">
+                            <MapPin className="w-3 h-3 text-gray-500" />
+                            <span>{parcela.latitud.toFixed(4)}, {parcela.longitud.toFixed(4)}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Leaf className="w-3 h-3 text-green-500" />
+                            <span>{parcela.cantidadCultivos} cultivos</span>
+                          </div>
+                          <div className="text-xs text-gray-500 mt-2">
+                            Cultivos: {parcela.nombresCultivos.join(', ')}
+                          </div>
+                        </div>
+                      </div>
+                    </Popup>
+                  </Marker>
+                ))}
+              </MapContainer>
             </div>
 
             {/* Lista de parcelas con coordenadas reales */}

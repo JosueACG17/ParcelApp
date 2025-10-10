@@ -65,6 +65,14 @@ class ApiService {
   // Métodos HTTP básicos
   async get<T>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
     const response = await this.axiosInstance.get(url, config);
+    // Si la respuesta es directamente los datos (array o objeto), la envolvemos
+    if (Array.isArray(response.data) || (response.data && !('success' in response.data))) {
+      return {
+        success: true,
+        message: 'OK',
+        data: response.data
+      };
+    }
     return response.data;
   }
 
@@ -101,6 +109,22 @@ class ApiService {
     });
 
     return response.data;
+  }
+
+  // Método para obtener arrays directamente (sin wrapper ApiResponse)
+  async getArray<T>(url: string, config?: AxiosRequestConfig): Promise<T[]> {
+    const response = await this.axiosInstance.get(url, config);
+    
+    if (Array.isArray(response.data)) {
+      return response.data;
+    }
+    
+    // Si viene con wrapper ApiResponse
+    if (response.data && Array.isArray(response.data.data)) {
+      return response.data.data;
+    }
+    
+    return [];
   }
 }
 

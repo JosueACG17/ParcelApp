@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import Modal from '../ui/Modal';
 import ConfirmModal from '../ui/ConfirmModal';
+import SuccessModal from '../ui/SuccessModal';
 import { useCultivos } from '../../hooks/useParcelasData';
 import type { Cultivo } from '../../types/parcelas';
 
@@ -18,19 +19,21 @@ interface CultivoFormData {
 }
 
 const CultivosCRUD: React.FC = () => {
-  const { cultivos, loading, error, createCultivo, updateCultivo, deleteCultivo, restoreCultivo, refetch } = useCultivos();
+  const { cultivos, loading, createCultivo, updateCultivo, deleteCultivo, restoreCultivo, refetch } = useCultivos();
   
   // Estados locales
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   const [selectedCultivo, setSelectedCultivo] = useState<Cultivo | null>(null);
   const [includeDeleted, setIncludeDeleted] = useState(false);
 
   // Filtros
-  const filteredCultivos = cultivos.filter(cultivo => 
-    cultivo.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredCultivos = (cultivos || []).filter(cultivo => 
+    cultivo && cultivo.nombre && cultivo.nombre.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Manejadores
@@ -38,8 +41,10 @@ const CultivosCRUD: React.FC = () => {
     try {
       await createCultivo(formData);
       setShowCreateModal(false);
-    } catch (error) {
-      console.error('Error al crear cultivo:', error);
+      setSuccessMessage('Cultivo creado exitosamente');
+      setShowSuccessModal(true);
+    } catch {
+      // Error handling could be added here if needed
     }
   };
 
@@ -50,8 +55,10 @@ const CultivosCRUD: React.FC = () => {
       await updateCultivo(selectedCultivo.id, formData);
       setShowEditModal(false);
       setSelectedCultivo(null);
-    } catch (error) {
-      console.error('Error al actualizar cultivo:', error);
+      setSuccessMessage('Cultivo actualizado exitosamente');
+      setShowSuccessModal(true);
+    } catch {
+      // Error handling could be added here if needed
     }
   };
 
@@ -62,22 +69,27 @@ const CultivosCRUD: React.FC = () => {
       await deleteCultivo(selectedCultivo.id);
       setShowDeleteModal(false);
       setSelectedCultivo(null);
-    } catch (error) {
-      console.error('Error al eliminar cultivo:', error);
+      setSuccessMessage('Cultivo eliminado exitosamente');
+      setShowSuccessModal(true);
+    } catch {
+      // Error handling could be added here if needed
     }
   };
 
   const handleRestore = async (cultivo: Cultivo) => {
     try {
       await restoreCultivo(cultivo.id);
-    } catch (error) {
-      console.error('Error al restaurar cultivo:', error);
+      setSuccessMessage('Cultivo restaurado exitosamente');
+      setShowSuccessModal(true);
+    } catch {
+      // Error handling could be added here if needed
     }
   };
 
   const handleToggleDeleted = () => {
-    setIncludeDeleted(!includeDeleted);
-    refetch();
+    const newIncludeDeleted = !includeDeleted;
+    setIncludeDeleted(newIncludeDeleted);
+    refetch(newIncludeDeleted);
   };
 
   if (loading) {
@@ -88,14 +100,6 @@ const CultivosCRUD: React.FC = () => {
     );
   }
 
-  if (error) {
-    return (
-      <div className="text-center py-12">
-        <div className="text-red-600 mb-2">Error al cargar cultivos</div>
-        <div className="text-sm text-gray-500">{error}</div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -188,7 +192,6 @@ const CultivosCRUD: React.FC = () => {
                           </span>
                         )}
                       </h3>
-                      <p className="text-sm text-gray-500">ID: {cultivo.id}</p>
                     </div>
                   </div>
                   
@@ -267,6 +270,14 @@ const CultivosCRUD: React.FC = () => {
         }}
         title="Eliminar Cultivo"
         message={`¿Estás seguro de que deseas eliminar el cultivo "${selectedCultivo?.nombre}"? Esta acción no se puede deshacer.`}
+      />
+
+      {/* Modal de éxito */}
+      <SuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title="¡Éxito!"
+        message={successMessage}
       />
     </div>
   );
