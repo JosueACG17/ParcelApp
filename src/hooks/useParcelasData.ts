@@ -164,11 +164,52 @@ export const useCultivos = () => {
     }
   };
 
+  const updateCultivo = async (id: number, cultivoData: {
+    nombre: string;
+  }) => {
+    try {
+      const updatedCultivo = await parcelasService.updateCultivo(id, cultivoData);
+      setCultivos(prev => prev.map(cultivo => 
+        cultivo.id === id ? updatedCultivo : cultivo
+      ));
+      return updatedCultivo;
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al actualizar el cultivo';
+      setError(errorMessage);
+      throw err;
+    }
+  };
+
+  const deleteCultivo = async (id: number) => {
+    try {
+      await parcelasService.deleteCultivo(id);
+      setCultivos(prev => prev.filter(cultivo => cultivo.id !== id));
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al eliminar el cultivo';
+      setError(errorMessage);
+      throw err;
+    }
+  };
+
+  const restoreCultivo = async (id: number) => {
+    try {
+      await parcelasService.restoreCultivo(id);
+      await fetchCultivos(); // Refetch data
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al restaurar el cultivo';
+      setError(errorMessage);
+      throw err;
+    }
+  };
+
   return {
     cultivos,
     loading,
     error,
     refetch: fetchCultivos,
     createCultivo,
+    updateCultivo,
+    deleteCultivo,
+    restoreCultivo,
   };
 };

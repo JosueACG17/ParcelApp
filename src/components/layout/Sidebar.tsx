@@ -24,7 +24,6 @@ const Sidebar: React.FC<SidebarProps> = ({
   activeTab,
   onTabChange,
   tabs,
-  activeAlerts = 0,
   onLogout
 }) => {
   const { user } = useAuthStore();
@@ -73,12 +72,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               >
                 <IconComponent className="w-5 h-5" />
                 {tab.label}
-                {/* Badge de alertas activas */}
-                {tab.id === 'alerts' && activeAlerts > 0 && (
-                  <span className="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full min-w-[20px] text-center">
-                    {activeAlerts}
-                  </span>
-                )}
+
               </motion.button>
             );
           })}

@@ -5,6 +5,8 @@ export const DASHBOARD_TABS = [
   { id: 'analytics', label: 'Análisis', icon: 'PieChart' },
   { id: 'map', label: 'Mapa', icon: 'MapPin' },
   { id: 'parcels', label: 'Parcelas', icon: 'Database' },
+  { id: 'cultivos', label: 'Cultivos', icon: 'Leaf' },
+  { id: 'sensors-crud', label: 'Gestión Sensores', icon: 'Activity' },
   { id: 'users', label: 'Usuarios', icon: 'Users' },
   { id: 'alerts', label: 'Alertas', icon: 'Bell' },
 ] as const;

@@ -15,8 +15,7 @@ interface TopbarProps {
 const Topbar: React.FC<TopbarProps> = ({
   onMenuClick,
   isFullScreen,
-  onToggleFullScreen,
-  activeAlerts = 0,
+  onToggleFullScreen,  
   onAlertsClick
 }) => {
   const { user } = useAuthStore();
@@ -50,11 +49,6 @@ const Topbar: React.FC<TopbarProps> = ({
               className="relative p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-xl transition-colors"
             >
               <Bell className="w-6 h-6" />
-              {activeAlerts > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-2 py-1 rounded-full min-w-[20px] text-center">
-                  {activeAlerts}
-                </span>
-              )}
             </button>
 
             {/* Full Screen Toggle */}

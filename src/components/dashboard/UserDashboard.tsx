@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuthStore } from "../../stores/authStore";
 import { ParcelCard, type ParcelCardData } from "./ParcelCard";
-import ParcelMap from "./ParcelMap";
+import ParcelMap from "./MapaParcelas";
 import ConfirmModal from "../ui/ConfirmModal";
 import Topbar from "../layout/Topbar";
 import {
@@ -12,7 +12,6 @@ import {
   LogOut,
   X,
 } from "lucide-react";
-import RealTimeSensors from "./RealTimeSensors";
 
 const userTabs = [
   { id: "overview", label: "Resumen", icon: Leaf },
@@ -80,7 +79,6 @@ const UserDashboard: React.FC = () => {
                 ))}
               </div>
             </div>
-            <RealTimeSensors />
           </div>
         );
       case "parcels":

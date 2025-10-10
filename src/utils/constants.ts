@@ -43,4 +43,10 @@ export const API_ENDPOINTS = {
   
   // Lecturas endpoints (Node.js service)
   LECTURAS: '/lecturas',
+  
+  // Logs endpoints
+  LOGS: '/logs',
+  
+  // Roles endpoints
+  ROLES: '/roles',
 } as const;
